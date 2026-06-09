@@ -18,6 +18,10 @@ class HomeController extends GetxController {
 
   var isLoading = true.obs;
   var searchQuery = ''.obs;
+  var activeFilters = <String>[].obs;
+
+  var filterType = 'All'.obs; // All, Free, Sale
+  var filterExcludeExpired = false.obs;
 
   @override
   void onInit() {
@@ -44,36 +48,59 @@ class HomeController extends GetxController {
     }
   }
 
-  void search(String query) {
-    searchQuery.value = query;
-    if (query.isEmpty) {
-      filteredCampaigns.value = campaigns;
-      filteredFoodPosts.value = foodPosts;
+  void toggleFilter(String tag) {
+    if (activeFilters.contains(tag)) {
+      activeFilters.remove(tag);
     } else {
-      loadingSearch(query);
+      activeFilters.add(tag);
     }
+    _applyFilters();
   }
 
-  void loadingSearch(String query) async {
-    final q = query.toLowerCase();
+  void setFilterType(String type) {
+    filterType.value = type;
+    _applyFilters();
+  }
 
-    filteredCampaigns.value = campaigns
-        .where(
-          (c) =>
-              c.title.toLowerCase().contains(q) ||
-              c.description.toLowerCase().contains(q) ||
-              c.tag.toLowerCase().contains(q),
-        )
-        .toList();
+  void toggleExcludeExpired() {
+    filterExcludeExpired.value = !filterExcludeExpired.value;
+    _applyFilters();
+  }
 
-    filteredFoodPosts.value = foodPosts
-        .where(
-          (p) =>
-              p.title.toLowerCase().contains(q) ||
-              p.description.toLowerCase().contains(q) ||
-              p.pickupLocation.toLowerCase().contains(q),
-        )
-        .toList();
+  void search(String query) {
+    searchQuery.value = query;
+    _applyFilters();
+  }
+
+  void _applyFilters() {
+    final q = searchQuery.value.toLowerCase();
+
+    filteredCampaigns.value = campaigns.where((c) {
+      if (q.isEmpty) return true;
+      return c.title.toLowerCase().contains(q) ||
+          c.description.toLowerCase().contains(q) ||
+          c.tag.toLowerCase().contains(q);
+    }).toList();
+
+    filteredFoodPosts.value = foodPosts.where((p) {
+      final matchesQuery = q.isEmpty ||
+          p.title.toLowerCase().contains(q) ||
+          p.description.toLowerCase().contains(q) ||
+          p.pickupLocation.toLowerCase().contains(q);
+
+      final matchesTags = activeFilters.isEmpty ||
+          activeFilters.every((tag) => p.tags.contains(tag));
+
+      final matchesType = filterType.value == 'All' || p.type == filterType.value;
+
+      bool isExpired = false;
+      if (p.expiryDate != null) {
+        isExpired = p.expiryDate!.isBefore(DateTime.now());
+      }
+      final matchesExpiry = !filterExcludeExpired.value || !isExpired;
+
+      return matchesQuery && matchesTags && matchesType && matchesExpiry;
+    }).toList();
   }
 
   Future<void> donate(String campaignId, double amount) async {

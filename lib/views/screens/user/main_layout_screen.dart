@@ -68,16 +68,17 @@ class _MainLayoutScreenState extends State<MainLayoutScreen>
           AnimatedBuilder(
             animation: _animationController,
             builder: (context, child) {
-              return Transform(
-                alignment: Alignment.centerLeft,
-                transform: Matrix4.identity()
-                  ..translate(_slideAnimation.value)
-                  ..scale(_scaleAnimation.value),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(
-                    _borderRadiusAnimation.value,
+              return Transform.translate(
+                offset: Offset(_slideAnimation.value, 0),
+                child: Transform.scale(
+                  scale: _scaleAnimation.value,
+                  alignment: Alignment.centerLeft,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(
+                      _borderRadiusAnimation.value,
+                    ),
+                    child: child,
                   ),
-                  child: child,
                 ),
               );
             },

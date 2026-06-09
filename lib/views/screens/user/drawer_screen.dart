@@ -7,6 +7,7 @@ import 'package:food_bridge/views/screens/user/my_requests_screen.dart';
 import 'package:food_bridge/views/screens/user/manage_posts_screen.dart';
 import 'package:food_bridge/views/screens/support/help_screen.dart';
 import 'package:food_bridge/views/screens/support/info_screen.dart';
+import 'package:food_bridge/views/screens/user/saved_posts_screen.dart';
 import 'package:food_bridge/views/widgets/custom_confirmation_dialog.dart';
 import 'package:get/get.dart';
 
@@ -51,6 +52,11 @@ class DrawerScreen extends StatelessWidget {
                   Icons.event_available,
                   "My Posts Status",
                   () => Get.to(() => const ManagePostsScreen()),
+                ),
+                _buildMenuItem(
+                  Icons.favorite_outline,
+                  "Saved Posts",
+                  () => Get.to(() => const SavedPostsScreen()),
                 ),
 
                 _buildMenuItem(

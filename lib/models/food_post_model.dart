@@ -15,6 +15,10 @@ class FoodPostModel {
   final double price;
   final String? claimedBy;
   final String? claimerContact;
+  final List<String> tags;
+  final DateTime? expiryDate;
+  final String? storageTemperature;
+  final List<String> safetyAlerts;
 
   FoodPostModel({
     required this.id,
@@ -31,6 +35,10 @@ class FoodPostModel {
     this.price = 0.0,
     this.claimedBy,
     this.claimerContact,
+    this.tags = const [],
+    this.expiryDate,
+    this.storageTemperature,
+    this.safetyAlerts = const [],
   });
 
   factory FoodPostModel.fromMap(Map<String, dynamic> map, String id) {
@@ -49,6 +57,10 @@ class FoodPostModel {
       price: map['price'] is num ? (map['price'] as num).toDouble() : 0.0,
       claimedBy: map['claimedBy'],
       claimerContact: map['claimerContact'],
+      tags: List<String>.from(map['tags'] ?? []),
+      expiryDate: (map['expiryDate'] as Timestamp?)?.toDate(),
+      storageTemperature: map['storageTemperature'],
+      safetyAlerts: List<String>.from(map['safetyAlerts'] ?? []),
     );
   }
 
@@ -67,6 +79,10 @@ class FoodPostModel {
       'price': price,
       'claimedBy': claimedBy,
       'claimerContact': claimerContact,
+      'tags': tags,
+      'expiryDate': expiryDate != null ? Timestamp.fromDate(expiryDate!) : null,
+      'storageTemperature': storageTemperature,
+      'safetyAlerts': safetyAlerts,
     };
   }
 }

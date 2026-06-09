@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:food_bridge/models/campaign_model.dart';
 import 'package:food_bridge/models/food_post_model.dart';
+import 'package:food_bridge/models/food_request_model.dart';
 import 'package:get/get.dart';
 
 class AdminController extends GetxController {
@@ -10,10 +11,13 @@ class AdminController extends GetxController {
   var allCampaigns = <CampaignModel>[].obs;
   var allUsers = <Map<String, dynamic>>[].obs;
   var allFeedback = <Map<String, dynamic>>[].obs;
+  var allRequests = <FoodRequestModel>[].obs;
 
   var isLoading = false.obs;
   var totalUsers = 0.obs;
   var totalPosts = 0.obs;
+  var totalCompletedPosts = 0.obs;
+  var totalAvailablePosts = 0.obs;
 
   @override
   void onInit() {
@@ -24,7 +28,12 @@ class AdminController extends GetxController {
   Future<void> fetchDashboardData() async {
     try {
       isLoading.value = true;
-      await Future.wait([fetchAllPosts(), fetchAllUsers(), fetchAllFeedback()]);
+      await Future.wait([
+        fetchAllPosts(),
+        fetchAllUsers(),
+        fetchAllFeedback(),
+        fetchAllRequests()
+      ]);
     } finally {
       isLoading.value = false;
     }
@@ -43,6 +52,8 @@ class AdminController extends GetxController {
         .toList();
 
     totalPosts.value = allFoodPosts.length + allCampaigns.length;
+    totalCompletedPosts.value = allFoodPosts.where((post) => post.status == 'Completed' || post.status == 'Claimed' || post.status == 'Sold').length;
+    totalAvailablePosts.value = allFoodPosts.where((post) => post.status == 'Available').length;
   }
 
   Future<void> fetchAllUsers() async {
@@ -51,6 +62,13 @@ class AdminController extends GetxController {
         .map((doc) => {'id': doc.id, ...doc.data()})
         .toList();
     totalUsers.value = allUsers.length;
+  }
+
+  Future<void> fetchAllRequests() async {
+    final snapshot = await _firestore.collection('food_requests').orderBy('createdAt', descending: true).get();
+    allRequests.value = snapshot.docs
+        .map((doc) => FoodRequestModel.fromMap(doc.data(), doc.id))
+        .toList();
   }
 
   Future<void> fetchAllFeedback() async {

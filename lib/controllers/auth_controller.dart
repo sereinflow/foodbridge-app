@@ -154,6 +154,32 @@ class AuthController extends GetxController {
     }
   }
 
+  Future<void> toggleBookmark(String postId) async {
+    final user = userModel.value;
+    if (user == null) return;
+
+    try {
+      final isSaved = user.savedPosts.contains(postId);
+      final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+      if (isSaved) {
+        await userRef.update({
+          'savedPosts': FieldValue.arrayRemove([postId])
+        });
+        userModel.value = user.copyWith(
+            savedPosts: user.savedPosts.where((id) => id != postId).toList());
+      } else {
+        await userRef.update({
+          'savedPosts': FieldValue.arrayUnion([postId])
+        });
+        userModel.value = user.copyWith(
+            savedPosts: [...user.savedPosts, postId]);
+      }
+    } catch (e) {
+      debugPrint("Error toggling bookmark: \$e");
+    }
+  }
+
   Future<void> logout() async {
     await _auth.signOut();
     Get.offAll(() => LoginScreen());

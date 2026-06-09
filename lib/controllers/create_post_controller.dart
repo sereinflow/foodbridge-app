@@ -18,6 +18,7 @@ class CreatePostController extends GetxController {
   var isLoading = false.obs;
   var selectedPostType = 0.obs;
   var foodType = 'Free'.obs;
+  var selectedTags = <String>[].obs;
 
   final titleController = TextEditingController();
   final descriptionController = TextEditingController();
@@ -27,9 +28,36 @@ class CreatePostController extends GetxController {
   final targetController = TextEditingController();
   final phoneController = TextEditingController();
   final imageUrlController = TextEditingController();
+  final temperatureController = TextEditingController();
 
   var selectedImage = Rx<File?>(null);
   var isUsingUrl = false.obs;
+  var expiryDate = Rx<DateTime?>(null);
+  var isSafetyVerified = false.obs;
+
+  Future<void> pickExpiryDateTime(BuildContext context) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().add(const Duration(days: 1)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 30)),
+    );
+    if (pickedDate != null) {
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+      );
+      if (pickedTime != null) {
+        expiryDate.value = DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          pickedTime.hour,
+          pickedTime.minute,
+        );
+      }
+    }
+  }
 
   @override
   void onClose() {
@@ -41,6 +69,7 @@ class CreatePostController extends GetxController {
     targetController.dispose();
     phoneController.dispose();
     imageUrlController.dispose();
+    temperatureController.dispose();
     super.onClose();
   }
 
@@ -102,6 +131,17 @@ class CreatePostController extends GetxController {
       if (imageUrl == null) return;
 
       if (selectedPostType.value == 0) {
+        List<String> safetyAlerts = [];
+        if (temperatureController.text.isNotEmpty) {
+          safetyAlerts.add("Requires specific storage temperature: ${temperatureController.text}");
+        }
+        if (expiryDate.value != null) {
+          final hoursUntilExpiry = expiryDate.value!.difference(DateTime.now()).inHours;
+          if (hoursUntilExpiry < 24) {
+            safetyAlerts.add("Expires soon (within 24 hours)");
+          }
+        }
+
         final post = FoodPostModel(
           id: postId,
           userId: userId,
@@ -115,6 +155,10 @@ class CreatePostController extends GetxController {
           status: 'Available',
           createdAt: DateTime.now(),
           price: double.tryParse(priceController.text) ?? 0.0,
+          tags: selectedTags.toList(),
+          expiryDate: expiryDate.value,
+          storageTemperature: temperatureController.text.trim().isEmpty ? null : temperatureController.text.trim(),
+          safetyAlerts: safetyAlerts,
         );
 
         await _repository.createFoodPost(post);
@@ -161,7 +205,11 @@ class CreatePostController extends GetxController {
     targetController.clear();
     phoneController.clear();
     imageUrlController.clear();
+    temperatureController.clear();
     selectedImage.value = null;
     isUsingUrl.value = false;
+    selectedTags.clear();
+    expiryDate.value = null;
+    isSafetyVerified.value = false;
   }
 }

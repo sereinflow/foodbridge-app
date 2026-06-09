@@ -7,6 +7,7 @@ import 'package:food_bridge/views/screens/admin/admin_posts_screen.dart';
 import 'package:food_bridge/views/screens/admin/admin_users_screen.dart';
 import 'package:food_bridge/views/screens/admin/admin_content_screen.dart';
 import 'package:food_bridge/views/screens/admin/admin_feedback_screen.dart';
+import 'package:food_bridge/views/screens/admin/admin_requests_screen.dart';
 import 'package:get/get.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
@@ -63,6 +64,28 @@ class AdminDashboardScreen extends StatelessWidget {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 15),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatCard(
+                            "Completed",
+                            controller.totalCompletedPosts.value.toString(),
+                            Icons.check_circle_outline,
+                            Colors.green,
+                          ),
+                        ),
+                        const SizedBox(width: 15),
+                        Expanded(
+                          child: _buildStatCard(
+                            "Available",
+                            controller.totalAvailablePosts.value.toString(),
+                            Icons.food_bank_outlined,
+                            Colors.blue,
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 30),
                     const Text(
                       "Quick Actions",
@@ -79,6 +102,13 @@ class AdminDashboardScreen extends StatelessWidget {
                       Icons.grid_view_rounded,
                       Colors.blueAccent,
                       () => Get.to(() => const AdminPostsScreen()),
+                    ),
+                    _buildMenuTile(
+                      "Collection Status",
+                      "View food requests status",
+                      Icons.assignment_turned_in_outlined,
+                      Colors.indigo,
+                      () => Get.to(() => const AdminRequestsScreen()),
                     ),
                     _buildMenuTile(
                       "Manage Users",
