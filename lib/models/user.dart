@@ -6,6 +6,7 @@ class UserModel {
 
   final String? phone;
   final String? bio;
+  final List<String> savedPosts;
 
   UserModel({
     required this.uid,
@@ -14,6 +15,7 @@ class UserModel {
     required this.role,
     this.phone,
     this.bio,
+    this.savedPosts = const [],
   });
 
   Map<String, dynamic> toMap() {
@@ -24,6 +26,7 @@ class UserModel {
       'role': role,
       'phone': phone,
       'bio': bio,
+      'savedPosts': savedPosts,
     };
   }
 
@@ -35,6 +38,7 @@ class UserModel {
       role: map['role'] ?? '',
       phone: map['phone'] ?? '',
       bio: map['bio'] ?? '',
+      savedPosts: List<String>.from(map['savedPosts'] ?? []),
     );
   }
 
@@ -45,6 +49,7 @@ class UserModel {
     String? role,
     String? phone,
     String? bio,
+    List<String>? savedPosts,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -53,6 +58,7 @@ class UserModel {
       role: role ?? this.role,
       phone: phone ?? this.phone,
       bio: bio ?? this.bio,
+      savedPosts: savedPosts ?? this.savedPosts,
     );
   }
 }

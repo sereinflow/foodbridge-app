@@ -177,7 +177,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 height: 150,
                 width: double.infinity,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
+                errorBuilder: (context, error, stackTrace) => Container(
                   height: 150,
                   width: double.infinity,
                   color: Colors.grey.shade200,
@@ -232,6 +232,31 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           textColor: textColor,
         ),
         const SizedBox(height: 15),
+
+        if (!isFundraising) ...[
+          const Text("Dietary Tags:", style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 5),
+          Obx(() => Wrap(
+                spacing: 8.0,
+                children: ['Halal', 'Vegan', 'Gluten-Free', 'Dairy-Free', 'Nut-Free'].map((tag) {
+                  final isSelected = controller.selectedTags.contains(tag);
+                  return FilterChip(
+                    label: Text(tag),
+                    selected: isSelected,
+                    onSelected: (bool selected) {
+                      if (selected) {
+                        controller.selectedTags.add(tag);
+                      } else {
+                        controller.selectedTags.remove(tag);
+                      }
+                    },
+                    selectedColor: AppColors.primary.withValues(alpha: 0.3),
+                    checkmarkColor: AppColors.primary,
+                  );
+                }).toList(),
+              )),
+          const SizedBox(height: 15),
+        ],
 
         // Multi-line description manually styled container since CustomTextField might not support maxLines easily (checking implementation it relies on default)
         // Adjusting CustomTextField usage or building similar container.
@@ -322,6 +347,58 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             shadowLight: shadowLight,
             shadowDark: shadowDark,
             textColor: textColor,
+          ),
+          const SizedBox(height: 15),
+          ExpansionTile(
+            title: const Text("Advanced Food Safety", style: TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: const Text("Expiry date & storage info", style: TextStyle(fontSize: 12, color: Colors.grey)),
+            leading: const Icon(Icons.security, color: AppColors.primary),
+            collapsedBackgroundColor: Colors.white,
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            childrenPadding: const EdgeInsets.all(15),
+            children: [
+              CustomTextField(
+                controller: controller.temperatureController,
+                icon: Icons.thermostat,
+                hint: "Storage Temp (e.g. 5°C, Frozen)",
+                bgColor: Colors.white,
+                shadowLight: shadowLight,
+                shadowDark: shadowDark,
+                textColor: textColor,
+              ),
+              const SizedBox(height: 15),
+              Row(
+                children: [
+                  Expanded(
+                    child: Obx(() => Text(
+                          controller.expiryDate.value == null
+                              ? "No Expiry Set"
+                              : "Expires: ${controller.expiryDate.value!.day}/${controller.expiryDate.value!.month}/${controller.expiryDate.value!.year} ${controller.expiryDate.value!.hour}:${controller.expiryDate.value!.minute.toString().padLeft(2, '0')}",
+                          style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+                        )),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () => controller.pickExpiryDateTime(context),
+                    icon: const Icon(Icons.calendar_month, color: Colors.white, size: 16),
+                    label: const Text("Set Expiry", style: TextStyle(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Obx(() => CheckboxListTile(
+                    value: controller.isSafetyVerified.value,
+                    onChanged: (val) {
+                      if (val != null) controller.isSafetyVerified.value = val;
+                    },
+                    title: const Text("I confirm this food meets safety standards", style: TextStyle(fontSize: 12)),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                    activeColor: AppColors.primary,
+                  )),
+            ],
           ),
         ] else ...[
           CustomTextField(

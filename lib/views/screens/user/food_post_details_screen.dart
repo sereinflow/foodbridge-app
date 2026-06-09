@@ -119,7 +119,9 @@ class FoodPostDetailsScreen extends StatelessWidget {
                           height: 1.5,
                         ),
                       ),
-                      const SizedBox(height: 30),
+                      const SizedBox(height: 25),
+                      _buildSafetyVerificationSection(),
+                      const SizedBox(height: 25),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(16),
                         child: Container(
@@ -249,6 +251,105 @@ class FoodPostDetailsScreen extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildSafetyVerificationSection() {
+    if (post.expiryDate == null &&
+        post.storageTemperature == null &&
+        post.safetyAlerts.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    bool isExpiringSoon = false;
+    if (post.expiryDate != null) {
+      final hoursUntilExpiry = post.expiryDate!.difference(DateTime.now()).inHours;
+      isExpiringSoon = hoursUntilExpiry < 24 && hoursUntilExpiry >= 0;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red.shade100, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.red.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.security, color: Colors.red.shade400, size: 20),
+              const SizedBox(width: 8),
+              const Text(
+                "Safety Verification",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 15),
+          if (post.expiryDate != null) ...[
+            Row(
+              children: [
+                const Icon(Icons.timer_outlined, size: 16, color: Colors.grey),
+                const SizedBox(width: 8),
+                Text(
+                  "Expires: ${post.expiryDate!.day}/${post.expiryDate!.month}/${post.expiryDate!.year} ${post.expiryDate!.hour}:${post.expiryDate!.minute.toString().padLeft(2, '0')}",
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isExpiringSoon ? Colors.red : Colors.black87,
+                    fontWeight: isExpiringSoon ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
+          if (post.storageTemperature != null) ...[
+            Row(
+              children: [
+                const Icon(Icons.thermostat, size: 16, color: Colors.grey),
+                const SizedBox(width: 8),
+                Text(
+                  "Storage Temp: ${post.storageTemperature}",
+                  style: const TextStyle(fontSize: 14, color: Colors.black87),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
+          if (post.safetyAlerts.isNotEmpty) ...[
+            const Divider(),
+            ...post.safetyAlerts.map((alert) => Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.warning_amber_rounded, size: 14, color: Colors.orange),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          alert,
+                          style: const TextStyle(fontSize: 12, color: Colors.orange),
+                        ),
+                      ),
+                    ],
+                  ),
+                )),
+          ],
+        ],
+      ),
     );
   }
 }

@@ -6,6 +6,7 @@ import 'package:food_bridge/utils/theme/colors.dart';
 import 'package:food_bridge/views/screens/user/food_post_details_screen.dart';
 import 'package:food_bridge/views/screens/user/post_details_screen.dart';
 import 'package:food_bridge/views/screens/post/create_post_screen.dart';
+import 'package:food_bridge/controllers/auth_controller.dart';
 import 'package:get/get.dart';
 
 class UserHomeScreen extends StatefulWidget {
@@ -41,7 +42,9 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               _buildHeroText(),
               const SizedBox(height: 20),
               _buildSearchBar(),
-              const SizedBox(height: 25),
+              const SizedBox(height: 15),
+              _buildFilterChips(),
+              const SizedBox(height: 20),
 
               const Text(
                 "Donation Rising",
@@ -104,7 +107,10 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                 letterSpacing: 1.5,
               ),
             ),
-            _buildIconBox(Icons.filter_alt_outlined),
+            GestureDetector(
+              onTap: () => _showFilterBottomSheet(context),
+              child: _buildIconBox(Icons.filter_alt_outlined),
+            ),
           ],
         ),
       ),
@@ -173,6 +179,31 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           suffixIcon: Icon(Icons.search, color: AppColors.primary),
         ),
       ),
+    );
+  }
+
+  Widget _buildFilterChips() {
+    final tags = ['Halal', 'Vegan', 'Gluten-Free', 'Dairy-Free', 'Nut-Free'];
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Obx(() => Row(
+            children: tags.map((tag) {
+              final isSelected = controller.activeFilters.contains(tag);
+              return Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: FilterChip(
+                  label: Text(tag, style: const TextStyle(fontSize: 12)),
+                  selected: isSelected,
+                  onSelected: (bool selected) {
+                    controller.toggleFilter(tag);
+                  },
+                  selectedColor: AppColors.primary.withValues(alpha: 0.3),
+                  checkmarkColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                ),
+              );
+            }).toList(),
+          )),
     );
   }
 
@@ -370,6 +401,12 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
   }
 
   Widget _buildFoodPostCard(FoodPostModel item) {
+    bool isExpiringSoon = false;
+    if (item.expiryDate != null) {
+      final hoursUntilExpiry = item.expiryDate!.difference(DateTime.now()).inHours;
+      isExpiringSoon = hoursUntilExpiry < 24 && hoursUntilExpiry >= 0;
+    }
+
     return GestureDetector(
       onTap: () => Get.to(() => FoodPostDetailsScreen(post: item)),
       child: Container(
@@ -436,6 +473,60 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                       ),
                     ),
                   ),
+                ),
+                if (isExpiringSoon)
+                  Positioned(
+                    bottom: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.warning_amber_rounded, color: Colors.white, size: 10),
+                          SizedBox(width: 2),
+                          Text(
+                            "Expiring Soon",
+                            style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Obx(() {
+                    final authController = Get.find<AuthController>();
+                    final user = authController.userModel.value;
+                    final isSaved = user?.savedPosts.contains(item.id) ?? false;
+                    return GestureDetector(
+                      onTap: () {
+                        authController.toggleBookmark(item.id);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 4,
+                            )
+                          ],
+                        ),
+                        child: Icon(
+                          isSaved ? Icons.favorite : Icons.favorite_border,
+                          color: isSaved ? Colors.red : Colors.grey,
+                          size: 16,
+                        ),
+                      ),
+                    );
+                  }),
                 ),
               ],
             ),
@@ -522,6 +613,69 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           Positioned(left: 24, child: _buildCircleAvatar(Colors.orange)),
         ],
       ),
+    );
+  }
+
+  void _showFilterBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Advanced Filters",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              const Text("Food Type", style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+              Obx(() => Wrap(
+                spacing: 10,
+                children: ['All', 'Free', 'Sale'].map((type) {
+                  final isSelected = controller.filterType.value == type;
+                  return ChoiceChip(
+                    label: Text(type),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      if (selected) controller.setFilterType(type);
+                    },
+                    selectedColor: AppColors.primary.withValues(alpha: 0.3),
+                  );
+                }).toList(),
+              )),
+              const SizedBox(height: 20),
+              const Text("Food Safety", style: TextStyle(fontWeight: FontWeight.bold)),
+              Obx(() => SwitchListTile(
+                title: const Text("Hide Expired Posts"),
+                value: controller.filterExcludeExpired.value,
+                onChanged: (val) => controller.toggleExcludeExpired(),
+                activeThumbColor: AppColors.primary,
+                contentPadding: EdgeInsets.zero,
+              )),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Get.back(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                  ),
+                  child: const Text("Apply Filters", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

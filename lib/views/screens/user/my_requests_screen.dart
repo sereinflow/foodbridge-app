@@ -115,7 +115,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                     width: 70,
                     height: 70,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
+                    errorBuilder: (context, error, stackTrace) => Container(
                       width: 70,
                       height: 70,
                       color: Colors.grey.shade200,
