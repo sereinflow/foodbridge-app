@@ -45,15 +45,25 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
-  void verifyToken() async {
-    String? role = await controller.isUserLoggedIn();
-    if (role == 'user') {
-      Get.offAll(() => MainLayoutScreen());
-    } else if (role == 'admin') {
-      Get.offAll(() => const AdminDashboardScreen());
-    } else {
-      Get.offAll(() => LoginScreen());
-    }
+  void verifyToken() {
+    controller
+        .isUserLoggedIn()
+        .then((role) {
+          if (!mounted) return;
+          if (role == 'user') {
+            Get.offAll(() => MainLayoutScreen());
+          } else if (role == 'admin') {
+            Get.offAll(() => const AdminDashboardScreen());
+          } else {
+            Get.offAll(() => LoginScreen());
+          }
+        })
+        .catchError((e) {
+          debugPrint('Error verifying token: $e');
+          if (mounted) {
+            Get.offAll(() => LoginScreen());
+          }
+        });
   }
 
   @override
@@ -64,7 +74,9 @@ class _SplashScreenState extends State<SplashScreen>
           Container(
             height: double.infinity,
             width: double.infinity,
-            decoration: BoxDecoration(color: AppColors.primary),
+            decoration: const BoxDecoration(
+              gradient: AppColors.primaryGradient,
+            ),
           ),
           Column(
             children: [

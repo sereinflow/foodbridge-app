@@ -26,7 +26,8 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    fetchData();
+    // Defer data fetching to avoid blocking during startup
+    // Data will be fetched when the home page is actually opened
   }
 
   Future<void> fetchData() async {
@@ -83,15 +84,18 @@ class HomeController extends GetxController {
     }).toList();
 
     filteredFoodPosts.value = foodPosts.where((p) {
-      final matchesQuery = q.isEmpty ||
+      final matchesQuery =
+          q.isEmpty ||
           p.title.toLowerCase().contains(q) ||
           p.description.toLowerCase().contains(q) ||
           p.pickupLocation.toLowerCase().contains(q);
 
-      final matchesTags = activeFilters.isEmpty ||
+      final matchesTags =
+          activeFilters.isEmpty ||
           activeFilters.every((tag) => p.tags.contains(tag));
 
-      final matchesType = filterType.value == 'All' || p.type == filterType.value;
+      final matchesType =
+          filterType.value == 'All' || p.type == filterType.value;
 
       bool isExpired = false;
       if (p.expiryDate != null) {

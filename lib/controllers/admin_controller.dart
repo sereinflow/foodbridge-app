@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:food_bridge/data/stats_repository.dart';
 import 'package:food_bridge/models/campaign_model.dart';
 import 'package:food_bridge/models/food_post_model.dart';
 import 'package:food_bridge/models/food_request_model.dart';
+import 'package:food_bridge/models/user_stats.dart';
 import 'package:get/get.dart';
 
 class AdminController extends GetxController {
@@ -14,6 +16,10 @@ class AdminController extends GetxController {
   var allRequests = <FoodRequestModel>[].obs;
 
   var isLoading = false.obs;
+  var isAnalyticsLoading = false.obs;
+  final analytics = Rxn<AdminAnalytics>();
+  final StatsRepository _statsRepository = StatsRepository();
+
   var totalUsers = 0.obs;
   var totalPosts = 0.obs;
   var totalCompletedPosts = 0.obs;
@@ -23,6 +29,15 @@ class AdminController extends GetxController {
   void onInit() {
     super.onInit();
     fetchDashboardData();
+  }
+
+  Future<void> fetchAnalytics() async {
+    try {
+      isAnalyticsLoading.value = true;
+      analytics.value = await _statsRepository.getAdminAnalytics();
+    } finally {
+      isAnalyticsLoading.value = false;
+    }
   }
 
   Future<void> fetchDashboardData() async {

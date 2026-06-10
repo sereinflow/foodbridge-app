@@ -3,11 +3,13 @@ import 'package:food_bridge/controllers/admin_controller.dart';
 import 'package:food_bridge/controllers/auth_controller.dart';
 import 'package:food_bridge/utils/theme/colors.dart';
 import 'package:food_bridge/views/widgets/custom_confirmation_dialog.dart';
+import 'package:food_bridge/views/widgets/interactive_card.dart';
 import 'package:food_bridge/views/screens/admin/admin_posts_screen.dart';
 import 'package:food_bridge/views/screens/admin/admin_users_screen.dart';
 import 'package:food_bridge/views/screens/admin/admin_content_screen.dart';
 import 'package:food_bridge/views/screens/admin/admin_feedback_screen.dart';
 import 'package:food_bridge/views/screens/admin/admin_requests_screen.dart';
+import 'package:food_bridge/views/screens/admin/admin_analytics_screen.dart';
 import 'package:get/get.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
@@ -19,7 +21,7 @@ class AdminDashboardScreen extends StatelessWidget {
     final AuthController authController = Get.find<AuthController>();
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: AppColors.background,
       body: Obx(() {
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
@@ -35,14 +37,14 @@ class AdminDashboardScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      "Dashboard Overview",
+                      'Overview',
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 15),
                     Row(
                       children: [
                         Expanded(
@@ -51,6 +53,7 @@ class AdminDashboardScreen extends StatelessWidget {
                             controller.totalUsers.value.toString(),
                             Icons.people_alt_outlined,
                             AppColors.primary,
+                            () => Get.to(() => const AdminUsersScreen()),
                           ),
                         ),
                         const SizedBox(width: 15),
@@ -60,6 +63,7 @@ class AdminDashboardScreen extends StatelessWidget {
                             controller.totalPosts.value.toString(),
                             Icons.article_outlined,
                             Colors.orange,
+                            () => Get.to(() => const AdminPostsScreen()),
                           ),
                         ),
                       ],
@@ -73,6 +77,7 @@ class AdminDashboardScreen extends StatelessWidget {
                             controller.totalCompletedPosts.value.toString(),
                             Icons.check_circle_outline,
                             Colors.green,
+                            () => Get.to(() => const AdminPostsScreen()),
                           ),
                         ),
                         const SizedBox(width: 15),
@@ -82,55 +87,77 @@ class AdminDashboardScreen extends StatelessWidget {
                             controller.totalAvailablePosts.value.toString(),
                             Icons.food_bank_outlined,
                             Colors.blue,
+                            () => Get.to(() => const AdminPostsScreen()),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 30),
                     const Text(
-                      "Quick Actions",
+                      'Quick Actions',
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    _buildMenuTile(
-                      "Manage Posts",
-                      "View and delete posts",
-                      Icons.grid_view_rounded,
-                      Colors.blueAccent,
-                      () => Get.to(() => const AdminPostsScreen()),
+                    const SizedBox(height: 15),
+                    GridView.count(
+                      crossAxisCount: 2,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      mainAxisSpacing: 15,
+                      crossAxisSpacing: 15,
+                      childAspectRatio: 1.15,
+                      children: [
+                        _buildGridMenuItem(
+                          title: 'Analytics',
+                          subtitle: 'Trends & platform insights',
+                          icon: Icons.analytics_outlined,
+                          color: AppColors.primary,
+                          onTap: () {
+                            controller.fetchAnalytics();
+                            Get.to(() => const AdminAnalyticsScreen());
+                          },
+                        ),
+                        _buildGridMenuItem(
+                          title: "Manage Posts",
+                          subtitle: "View and delete posts",
+                          icon: Icons.grid_view_rounded,
+                          color: Colors.blue,
+                          onTap: () => Get.to(() => const AdminPostsScreen()),
+                        ),
+                        _buildGridMenuItem(
+                          title: "Requests",
+                          subtitle: "Food requests status",
+                          icon: Icons.assignment_turned_in_outlined,
+                          color: Colors.indigo,
+                          onTap: () => Get.to(() => const AdminRequestsScreen()),
+                        ),
+                        _buildGridMenuItem(
+                          title: "Manage Users",
+                          subtitle: "View registered users",
+                          icon: Icons.group_outlined,
+                          color: Colors.purple,
+                          onTap: () => Get.to(() => const AdminUsersScreen()),
+                        ),
+                        _buildGridMenuItem(
+                          title: "Content",
+                          subtitle: "Terms & About Us editors",
+                          icon: Icons.edit_note_rounded,
+                          color: Colors.teal,
+                          onTap: () => Get.to(() => const AdminContentScreen()),
+                        ),
+                        _buildGridMenuItem(
+                          title: "Feedback",
+                          subtitle: "View received messages",
+                          icon: Icons.chat_bubble_outline_rounded,
+                          color: Colors.amber.shade800,
+                          onTap: () => Get.to(() => const AdminFeedbackScreen()),
+                        ),
+                      ],
                     ),
-                    _buildMenuTile(
-                      "Collection Status",
-                      "View food requests status",
-                      Icons.assignment_turned_in_outlined,
-                      Colors.indigo,
-                      () => Get.to(() => const AdminRequestsScreen()),
-                    ),
-                    _buildMenuTile(
-                      "Manage Users",
-                      "View registered users",
-                      Icons.group_outlined,
-                      Colors.purpleAccent,
-                      () => Get.to(() => const AdminUsersScreen()),
-                    ),
-                    _buildMenuTile(
-                      "Content Management",
-                      "Update Terms & About Us",
-                      Icons.edit_note_rounded,
-                      Colors.teal,
-                      () => Get.to(() => const AdminContentScreen()),
-                    ),
-                    _buildMenuTile(
-                      "User Feedback",
-                      "View received messages",
-                      Icons.chat_bubble_outline_rounded,
-                      Colors.amber,
-                      () => Get.to(() => const AdminFeedbackScreen()),
-                    ),
+                    const SizedBox(height: 30),
                   ],
                 ),
               ),
@@ -145,7 +172,7 @@ class AdminDashboardScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.only(top: 60, left: 20, right: 20, bottom: 30),
       decoration: const BoxDecoration(
-        color: AppColors.primary,
+        gradient: AppColors.primaryGradient,
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
         boxShadow: [
           BoxShadow(
@@ -158,10 +185,10 @@ class AdminDashboardScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
+          const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 "Admin Panel",
                 style: TextStyle(
                   color: Colors.white70,
@@ -169,8 +196,8 @@ class AdminDashboardScreen extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 5),
-              const Text(
+              SizedBox(height: 5),
+              Text(
                 "Welcome Back",
                 style: TextStyle(
                   color: Colors.white,
@@ -209,111 +236,110 @@ class AdminDashboardScreen extends StatelessWidget {
     String value,
     IconData icon,
     Color color,
+    VoidCallback onTap,
   ) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
+    return InteractiveCard(
+      onTap: onTap,
+      color: Colors.white,
+      activeColor: color.withValues(alpha: 0.06),
+      borderRadius: 20,
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              Icon(
+                Icons.arrow_outward_rounded,
+                size: 14,
+                color: Colors.grey.shade400,
+              ),
+            ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           Text(
             value,
             style: const TextStyle(
-              fontSize: 28,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 4),
           Text(
             title,
-            style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMenuTile(
-    String title,
-    String subtitle,
-    IconData icon,
-    Color color,
-    VoidCallback onTap,
-  ) {
-    return GestureDetector(
+  Widget _buildGridMenuItem({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InteractiveCard(
       onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 15),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
+      color: Colors.white,
+      activeColor: color.withValues(alpha: 0.06),
+      borderRadius: 20,
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(15),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
               ),
-              child: Icon(icon, color: color, size: 28),
-            ),
-            const SizedBox(width: 20),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
-                  ),
-                ],
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: AppColors.textSecondary,
+                  height: 1.2,
+                ),
               ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 18,
-              color: Colors.grey.shade300,
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
     );
   }

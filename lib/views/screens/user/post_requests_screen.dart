@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:food_bridge/controllers/auth_controller.dart';
+import 'package:food_bridge/controllers/review_controller.dart';
 import 'package:food_bridge/data/post_repository.dart';
 import 'package:food_bridge/models/food_request_model.dart';
+import 'package:food_bridge/models/review_model.dart';
 import 'package:food_bridge/utils/theme/colors.dart';
+import 'package:food_bridge/utils/theme/spacing.dart';
+import 'package:food_bridge/utils/theme/typography.dart';
+import 'package:food_bridge/views/widgets/loading_state_widget.dart';
+import 'package:food_bridge/views/widgets/review_dialog.dart';
 import 'package:get/get.dart';
 
 class PostRequestsScreen extends StatefulWidget {
@@ -20,8 +27,11 @@ class PostRequestsScreen extends StatefulWidget {
 
 class _PostRequestsScreenState extends State<PostRequestsScreen> {
   final PostRepository _repository = PostRepository();
+  final ReviewController _reviewController = Get.put(ReviewController());
+  final AuthController _authController = Get.find<AuthController>();
   bool _isLoading = true;
   List<FoodRequestModel> _requests = [];
+  final Map<String, bool> _hasReviewed = {};
 
   @override
   void initState() {
@@ -33,12 +43,21 @@ class _PostRequestsScreenState extends State<PostRequestsScreen> {
     setState(() => _isLoading = true);
     try {
       final requests = await _repository.getRequestsForPost(widget.postId);
+      final donorId = _authController.userModel.value?.uid ?? '';
+      _hasReviewed.clear();
+      for (final request in requests.where((r) => r.status == 'Completed')) {
+        final existing = await _reviewController.getExistingReview(
+          request.id,
+          donorId,
+        );
+        _hasReviewed[request.id] = existing != null;
+      }
       setState(() {
         _requests = requests;
         _isLoading = false;
       });
     } catch (e) {
-      Get.snackbar("Error", "Failed to fetch requests: $e");
+      Get.snackbar('Error', 'Failed to fetch requests: $e');
       setState(() => _isLoading = false);
     }
   }
@@ -46,52 +65,83 @@ class _PostRequestsScreenState extends State<PostRequestsScreen> {
   Future<void> _updateStatus(String requestId, String status) async {
     try {
       await _repository.updateRequestStatus(requestId, status);
-      Get.snackbar("Success", "Request status updated to $status");
+      Get.snackbar('Success', 'Request status updated to $status');
       _fetchRequests();
     } catch (e) {
-      Get.snackbar("Error", "Failed to update status: $e");
+      Get.snackbar('Error', 'Failed to update status: $e');
     }
+  }
+
+  void _showReviewDialog(FoodRequestModel request) {
+    ReviewDialog.show(
+      context: context,
+      title: 'Rate Volunteer',
+      subtitle: 'How was your experience with ${request.requesterName}?',
+      onSubmit: (rating, comment) => _reviewController.submitReview(
+        reviewedUserId: request.requesterId,
+        reviewedUserName: request.requesterName,
+        rating: rating,
+        comment: comment,
+        type: ReviewType.donorToVolunteer,
+        requestId: request.id,
+        postId: request.postId,
+      ).then((success) {
+        if (success) {
+          setState(() => _hasReviewed[request.id] = true);
+        }
+        return success;
+      }),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
-          "Requests: ${widget.postTitle}",
-          style: const TextStyle(color: Colors.white, fontSize: 18),
+          'Requests: ${widget.postTitle}',
+          style: AppTypography.titleLarge,
         ),
-        backgroundColor: AppColors.primary,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const LoadingStateWidget()
           : _requests.isEmpty
-          ? const Center(child: Text("No requests for this item yet."))
-          : RefreshIndicator(
-              onRefresh: _fetchRequests,
-              child: ListView.builder(
-                padding: const EdgeInsets.all(15),
-                itemCount: _requests.length,
-                itemBuilder: (context, index) {
-                  final request = _requests[index];
-                  return _buildRequestCard(request);
-                },
-              ),
-            ),
+              ? const Center(child: Text('No requests for this item yet.'))
+              : RefreshIndicator(
+                  onRefresh: _fetchRequests,
+                  color: AppColors.primary,
+                  child: ListView.builder(
+                    padding: AppSpacing.screenPadding,
+                    itemCount: _requests.length,
+                    itemBuilder: (context, index) {
+                      return _buildRequestCard(_requests[index]);
+                    },
+                  ),
+                ),
     );
   }
 
   Widget _buildRequestCard(FoodRequestModel request) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 15),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      elevation: 2,
+    final canReview = request.status == 'Completed' &&
+        request.postType == 'Free' &&
+        !(_hasReviewed[request.id] ?? false);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.textPrimary.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(15),
+        padding: AppSpacing.cardPadding,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -104,18 +154,13 @@ class _PostRequestsScreenState extends State<PostRequestsScreen> {
                     children: [
                       Text(
                         request.requesterName,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
+                        style: AppTypography.headlineMedium.copyWith(
                           color: AppColors.primary,
                         ),
                       ),
                       Text(
-                        "Requested on ${request.createdAt.day}/${request.createdAt.month}/${request.createdAt.year}",
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
+                        'Requested on ${request.createdAt.day}/${request.createdAt.month}/${request.createdAt.year}',
+                        style: AppTypography.bodySmall,
                       ),
                     ],
                   ),
@@ -124,18 +169,9 @@ class _PostRequestsScreenState extends State<PostRequestsScreen> {
               ],
             ),
             const Divider(height: 25),
-            _buildInfoRow(
-              Icons.phone,
-              "Phone",
-              request.requesterNumber,
-              isPhone: true,
-            ),
+            _buildInfoRow(Icons.phone, 'Phone', request.requesterNumber),
             const SizedBox(height: 10),
-            _buildInfoRow(
-              Icons.location_on,
-              "Address",
-              request.requesterAddress,
-            ),
+            _buildInfoRow(Icons.location_on, 'Address', request.requesterAddress),
             const SizedBox(height: 20),
             if (request.status == 'Pending')
               Row(
@@ -144,11 +180,10 @@ class _PostRequestsScreenState extends State<PostRequestsScreen> {
                     child: OutlinedButton(
                       onPressed: () => _updateStatus(request.id, 'Rejected'),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red,
-                        side: const BorderSide(color: Colors.red),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        foregroundColor: AppColors.error,
+                        side: const BorderSide(color: AppColors.error),
                       ),
-                      child: const Text("Reject"),
+                      child: const Text('Reject'),
                     ),
                   ),
                   const SizedBox(width: 15),
@@ -156,13 +191,9 @@ class _PostRequestsScreenState extends State<PostRequestsScreen> {
                     child: ElevatedButton(
                       onPressed: () => _updateStatus(request.id, 'Approved'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        backgroundColor: AppColors.success,
                       ),
-                      child: const Text(
-                        "Approve",
-                        style: TextStyle(color: Colors.white),
-                      ),
+                      child: const Text('Approve'),
                     ),
                   ),
                 ],
@@ -172,13 +203,25 @@ class _PostRequestsScreenState extends State<PostRequestsScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () => _updateStatus(request.id, 'Completed'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  child: const Text(
-                    "Mark as Completed",
-                    style: TextStyle(color: Colors.white),
+                  child: const Text('Mark as Completed'),
+                ),
+              )
+            else if (canReview)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => _showReviewDialog(request),
+                  icon: const Icon(Icons.star_outline),
+                  label: const Text('Rate Volunteer'),
+                ),
+              )
+            else if (request.status == 'Completed' &&
+                (_hasReviewed[request.id] ?? false))
+              Center(
+                child: Text(
+                  'Review submitted',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: AppColors.success,
                   ),
                 ),
               ),
@@ -188,39 +231,15 @@ class _PostRequestsScreenState extends State<PostRequestsScreen> {
     );
   }
 
-  Widget _buildInfoRow(
-    IconData icon,
-    String label,
-    String value, {
-    bool isPhone = false,
-  }) {
+  Widget _buildInfoRow(IconData icon, String label, String value) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: Colors.grey),
+        Icon(icon, size: 16, color: AppColors.textSecondary),
         const SizedBox(width: 8),
-        Text(
-          "$label: ",
-          style: const TextStyle(
-            fontSize: 14,
-            color: Colors.grey,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
+        Text('$label: ', style: AppTypography.bodyMedium),
         Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-          ),
+          child: Text(value, style: AppTypography.titleMedium),
         ),
-        if (isPhone)
-          IconButton(
-            icon: const Icon(Icons.copy, color: Colors.blue, size: 20),
-            onPressed: () {
-              Get.snackbar("Contact", "Number: $value");
-            },
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-          ),
       ],
     );
   }
@@ -229,19 +248,15 @@ class _PostRequestsScreenState extends State<PostRequestsScreen> {
     Color color;
     switch (status.toLowerCase()) {
       case 'pending':
-        color = Colors.orange;
-        break;
+        color = AppColors.warning;
       case 'approved':
-        color = Colors.green;
-        break;
+        color = AppColors.success;
       case 'rejected':
-        color = Colors.red;
-        break;
+        color = AppColors.error;
       case 'completed':
-        color = Colors.blue;
-        break;
+        color = AppColors.info;
       default:
-        color = Colors.grey;
+        color = AppColors.textSecondary;
     }
 
     return Container(
@@ -252,11 +267,7 @@ class _PostRequestsScreenState extends State<PostRequestsScreen> {
       ),
       child: Text(
         status,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-          color: color,
-        ),
+        style: AppTypography.labelSmall.copyWith(color: color),
       ),
     );
   }

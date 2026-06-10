@@ -2,7 +2,8 @@ name: food_bridge
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none"
+# Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
@@ -20,6 +21,8 @@ dependencies:
   firebase_storage: ^13.0.5
   image_picker: ^1.2.1
   uuid: ^4.5.2
+  fl_chart: ^0.70.2
+  intl: ^0.20.2
 
 
 dev_dependencies:

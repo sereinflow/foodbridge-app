@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:food_bridge/controllers/home_controller.dart';
+import 'package:food_bridge/controllers/main_layout_controller.dart';
 import 'package:food_bridge/models/campaign_model.dart';
 import 'package:food_bridge/models/food_post_model.dart';
 import 'package:food_bridge/utils/theme/colors.dart';
@@ -10,8 +11,7 @@ import 'package:food_bridge/controllers/auth_controller.dart';
 import 'package:get/get.dart';
 
 class UserHomeScreen extends StatefulWidget {
-  final VoidCallback? onMenuPressed;
-  const UserHomeScreen({super.key, this.onMenuPressed});
+  const UserHomeScreen({super.key});
 
   @override
   State<UserHomeScreen> createState() => _UserHomeScreenState();
@@ -29,7 +29,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: _buildAppBar(),
       body: RefreshIndicator(
         onRefresh: controller.fetchData,
@@ -47,11 +47,11 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               const SizedBox(height: 20),
 
               const Text(
-                "Donation Rising",
+                'Donation Rising',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black,
+                  color: AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 15),
@@ -59,11 +59,11 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               const SizedBox(height: 25),
 
               const Text(
-                "Food Share",
+                'Food Share',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black,
+                  color: AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 15),
@@ -85,7 +85,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.card,
       elevation: 0,
       titleSpacing: 0,
       automaticallyImplyLeading: false,
@@ -95,16 +95,49 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             GestureDetector(
-              onTap: widget.onMenuPressed,
-              child: _buildIconBox(Icons.menu_rounded),
+              onTap: () => Get.find<MainLayoutController>().changeIndex(3),
+              child: Obx(() {
+                final user = Get.find<AuthController>().userModel.value;
+                final initials = user?.name.isNotEmpty == true
+                    ? user!.name[0].toUpperCase()
+                    : 'U';
+                return Container(
+                  height: 40,
+                  width: 40,
+                  decoration: BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    initials,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                );
+              }),
             ),
-            const Text(
-              "Food Bridge",
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.5,
+            ShaderMask(
+              shaderCallback: (bounds) =>
+                  AppColors.primaryGradient.createShader(bounds),
+              child: const Text(
+                'Food Bridge',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.5,
+                ),
               ),
             ),
             GestureDetector(
@@ -122,7 +155,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       height: 40,
       width: 40,
       decoration: BoxDecoration(
-        color: AppColors.greenAccent,
+        color: AppColors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Icon(icon, color: AppColors.primary, size: 24),
@@ -131,20 +164,24 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
   Widget _buildHeroText() {
     return RichText(
-      text: const TextSpan(
-        style: TextStyle(fontSize: 24, color: Colors.black, height: 1.3),
-        children: [
-          TextSpan(text: "Give "),
+      text: TextSpan(
+        style: const TextStyle(
+          fontSize: 24,
+          color: AppColors.textPrimary,
+          height: 1.3,
+        ),
+        children: const [
+          TextSpan(text: 'Give '),
           TextSpan(
-            text: "today",
+            text: 'today',
             style: TextStyle(
               color: AppColors.primary,
               fontWeight: FontWeight.bold,
             ),
           ),
-          TextSpan(text: ", so they can\nthrive "),
+          TextSpan(text: ', so they can\nthrive '),
           TextSpan(
-            text: "tomorrow!",
+            text: 'tomorrow!',
             style: TextStyle(
               color: AppColors.primary,
               fontWeight: FontWeight.bold,

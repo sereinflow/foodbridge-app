@@ -4,6 +4,7 @@ import 'package:food_bridge/models/user.dart';
 import 'package:food_bridge/views/screens/auth/login_screen.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
 
 class AuthController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -64,12 +65,14 @@ class AuthController extends GetxController {
         name: name,
         email: email,
         role: 'user',
+        createdAt: DateTime.now(),
       );
 
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .set(newUser.toMap());
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        ...newUser.toMap(),
+        'averageRating': 0.0,
+        'reviewCount': 0,
+      });
 
       userModel.value = newUser;
 
@@ -99,10 +102,18 @@ class AuthController extends GetxController {
       final currentUser = FirebaseAuth.instance.currentUser;
 
       if (currentUser != null) {
+        // Add timeout to prevent indefinite waiting
         final userDoc = await FirebaseFirestore.instance
             .collection('users')
             .doc(currentUser.uid)
-            .get();
+            .get()
+            .timeout(
+              const Duration(seconds: 10),
+              onTimeout: () {
+                debugPrint('Firestore query timeout');
+                throw TimeoutException('Firestore query took too long');
+              },
+            );
 
         if (userDoc.exists) {
           userModel.value = UserModel.fromMap(userDoc.data()!);
@@ -160,20 +171,24 @@ class AuthController extends GetxController {
 
     try {
       final isSaved = user.savedPosts.contains(postId);
-      final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+      final userRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid);
 
       if (isSaved) {
         await userRef.update({
-          'savedPosts': FieldValue.arrayRemove([postId])
+          'savedPosts': FieldValue.arrayRemove([postId]),
         });
         userModel.value = user.copyWith(
-            savedPosts: user.savedPosts.where((id) => id != postId).toList());
+          savedPosts: user.savedPosts.where((id) => id != postId).toList(),
+        );
       } else {
         await userRef.update({
-          'savedPosts': FieldValue.arrayUnion([postId])
+          'savedPosts': FieldValue.arrayUnion([postId]),
         });
         userModel.value = user.copyWith(
-            savedPosts: [...user.savedPosts, postId]);
+          savedPosts: [...user.savedPosts, postId],
+        );
       }
     } catch (e) {
       debugPrint("Error toggling bookmark: \$e");

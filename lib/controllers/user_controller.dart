@@ -13,7 +13,7 @@ class UserController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    fetchUser();
+    // Defer user fetching to avoid blocking during startup
   }
 
   void fetchUser() {
@@ -29,8 +29,13 @@ class UserController extends GetxController {
 
   Future<void> updateName(String newName) async {
     if (newName.trim().isEmpty) {
-      Get.snackbar('Error', 'Name cannot be empty',
-          snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.redAccent, colorText: Colors.white);
+      Get.snackbar(
+        'Error',
+        'Name cannot be empty',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
       return;
     }
 
@@ -42,12 +47,20 @@ class UserController extends GetxController {
           'name': newName.trim(),
         });
         name.value = newName.trim();
-        Get.snackbar('Success', 'Name updated successfully',
-            snackPosition: SnackPosition.BOTTOM);
+        Get.snackbar(
+          'Success',
+          'Name updated successfully',
+          snackPosition: SnackPosition.BOTTOM,
+        );
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to update name: $e',
-          snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.redAccent, colorText: Colors.white);
+      Get.snackbar(
+        'Error',
+        'Failed to update name: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
     } finally {
       isLoading.value = false;
     }

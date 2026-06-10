@@ -161,4 +161,28 @@ class PostRepository {
       'status': newStatus,
     });
   }
+
+  /// Fetches food posts by their document IDs (for favorites).
+  Future<List<FoodPostModel>> getFoodPostsByIds(List<String> postIds) async {
+    if (postIds.isEmpty) return [];
+
+    final List<FoodPostModel> results = [];
+    // Firestore whereIn supports max 30 items per query
+    for (var i = 0; i < postIds.length; i += 30) {
+      final chunk = postIds.sublist(
+        i,
+        i + 30 > postIds.length ? postIds.length : i + 30,
+      );
+      final snapshot = await _firestore
+          .collection('food_posts')
+          .where(FieldPath.documentId, whereIn: chunk)
+          .get();
+      results.addAll(
+        snapshot.docs
+            .map((doc) => FoodPostModel.fromMap(doc.data(), doc.id)),
+      );
+    }
+    results.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return results;
+  }
 }

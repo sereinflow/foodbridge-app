@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:food_bridge/firebase_options.dart';
 import 'package:food_bridge/services/di.dart';
+import 'package:food_bridge/utils/theme/app_theme.dart';
 import 'package:food_bridge/views/screens/auth/splash.dart';
 import 'package:get/get.dart';
 
@@ -19,6 +20,7 @@ class FoodBridge extends StatelessWidget {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Food Bridge',
+      theme: AppTheme.light,
       home: SplashScreen(),
     );
   }

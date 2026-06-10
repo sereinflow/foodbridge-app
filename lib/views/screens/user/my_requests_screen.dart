@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:food_bridge/controllers/review_controller.dart';
 import 'package:food_bridge/data/post_repository.dart';
 import 'package:food_bridge/models/food_request_model.dart';
+import 'package:food_bridge/models/review_model.dart';
 import 'package:food_bridge/utils/theme/colors.dart';
+import 'package:food_bridge/utils/theme/spacing.dart';
+import 'package:food_bridge/utils/theme/typography.dart';
+import 'package:food_bridge/views/widgets/empty_state_widget.dart';
+import 'package:food_bridge/views/widgets/loading_state_widget.dart';
+import 'package:food_bridge/views/widgets/review_dialog.dart';
 import 'package:get/get.dart';
 
 class MyRequestsScreen extends StatefulWidget {
@@ -13,8 +20,10 @@ class MyRequestsScreen extends StatefulWidget {
 
 class _MyRequestsScreenState extends State<MyRequestsScreen> {
   final PostRepository _repository = PostRepository();
+  final ReviewController _reviewController = Get.put(ReviewController());
   bool _isLoading = true;
   List<FoodRequestModel> _requests = [];
+  final Map<String, bool> _hasReviewed = {};
 
   @override
   void initState() {
@@ -26,124 +35,129 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
     setState(() => _isLoading = true);
     try {
       final requests = await _repository.getMyRequests();
+      _hasReviewed.clear();
+      for (final request in requests.where((r) => r.status == 'Completed')) {
+        final existing = await _reviewController.getExistingReview(
+          request.id,
+          request.requesterId,
+        );
+        _hasReviewed[request.id] = existing != null;
+      }
       setState(() {
         _requests = requests;
         _isLoading = false;
       });
     } catch (e) {
-      Get.snackbar("Error", "Failed to fetch requests: $e");
+      Get.snackbar('Error', 'Failed to fetch requests: $e');
       setState(() => _isLoading = false);
     }
+  }
+
+  void _showReviewDialog(FoodRequestModel request) {
+    final type = request.postType == 'Sale'
+        ? ReviewType.buyerToSeller
+        : ReviewType.volunteerToDonor;
+
+    ReviewDialog.show(
+      context: context,
+      title: 'Rate ${request.postType == 'Sale' ? 'Seller' : 'Donor'}',
+      subtitle: 'How was your experience with "${request.postTitle}"?',
+      onSubmit: (rating, comment) => _reviewController.submitReview(
+        reviewedUserId: request.donorId,
+        reviewedUserName: 'Donor',
+        rating: rating,
+        comment: comment,
+        type: type,
+        requestId: request.id,
+        postId: request.postId,
+      ).then((success) {
+        if (success) {
+          setState(() => _hasReviewed[request.id] = true);
+        }
+        return success;
+      }),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text(
-          "My Collections",
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: AppColors.primary,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(title: const Text('My Collections')),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const LoadingStateWidget()
           : _requests.isEmpty
-          ? _buildEmptyState()
-          : RefreshIndicator(
-              onRefresh: _fetchRequests,
-              child: ListView.builder(
-                padding: const EdgeInsets.all(15),
-                itemCount: _requests.length,
-                itemBuilder: (context, index) {
-                  final request = _requests[index];
-                  return _buildRequestCard(request);
-                },
-              ),
-            ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.inventory_2_outlined,
-            size: 60,
-            color: Colors.grey.shade300,
-          ),
-          const SizedBox(height: 15),
-          Text(
-            "No requests yet",
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
-          ),
-          const SizedBox(height: 10),
-          ElevatedButton(
-            onPressed: () => Get.back(),
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            child: const Text(
-              "Explore Food Hub",
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
+              ? EmptyStateWidget(
+                  icon: Icons.inventory_2_outlined,
+                  title: 'No requests yet',
+                  subtitle: 'Start collecting or buying food from the home feed.',
+                  actionLabel: 'Explore Food Hub',
+                  onAction: () => Get.back(),
+                )
+              : RefreshIndicator(
+                  onRefresh: _fetchRequests,
+                  color: AppColors.primary,
+                  child: ListView.builder(
+                    padding: AppSpacing.screenPadding,
+                    itemCount: _requests.length,
+                    itemBuilder: (context, index) {
+                      return _buildRequestCard(_requests[index]);
+                    },
+                  ),
+                ),
     );
   }
 
   Widget _buildRequestCard(FoodRequestModel request) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 15),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      elevation: 2,
+    final canReview = request.status == 'Completed' &&
+        !(_hasReviewed[request.id] ?? false);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.textPrimary.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: AppSpacing.cardPadding,
         child: Column(
           children: [
             Row(
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                   child: Image.network(
                     request.postImageUrl,
                     width: 70,
                     height: 70,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
+                    errorBuilder: (_, _, _) => Container(
                       width: 70,
                       height: 70,
-                      color: Colors.grey.shade200,
+                      color: AppColors.surfaceMuted,
                       child: const Icon(Icons.broken_image),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        request.postTitle,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
+                      Text(request.postTitle, style: AppTypography.titleLarge),
                       const SizedBox(height: 4),
                       Text(
-                        "Requested on ${request.createdAt.day}/${request.createdAt.month}/${request.createdAt.year}",
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
+                        'Requested on ${request.createdAt.day}/${request.createdAt.month}/${request.createdAt.year}',
+                        style: AppTypography.bodySmall,
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.sm),
                       _buildStatusBadge(request.status),
                     ],
                   ),
@@ -157,46 +171,28 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      "Type",
-                      style: TextStyle(fontSize: 10, color: Colors.grey),
-                    ),
-                    Text(
-                      request.postType,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    Text('Type', style: AppTypography.bodySmall),
+                    Text(request.postType, style: AppTypography.titleMedium),
                   ],
                 ),
-                if (request.status == 'Approved')
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
+                if (canReview)
+                  ElevatedButton.icon(
+                    onPressed: () => _showReviewDialog(request),
+                    icon: const Icon(Icons.star_outline, size: 16),
+                    label: const Text('Rate'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                     ),
-                    decoration: BoxDecoration(
-                      color: AppColors.greenAccent.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(
-                          Icons.check_circle,
-                          size: 14,
-                          color: AppColors.primary,
-                        ),
-                        SizedBox(width: 4),
-                        Text(
-                          "Approved",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                  )
+                else if (request.status == 'Completed' &&
+                    (_hasReviewed[request.id] ?? false))
+                  Text(
+                    'Reviewed',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: AppColors.success,
                     ),
                   ),
               ],
@@ -211,19 +207,15 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
     Color color;
     switch (status.toLowerCase()) {
       case 'pending':
-        color = Colors.orange;
-        break;
+        color = AppColors.warning;
       case 'approved':
-        color = Colors.green;
-        break;
+        color = AppColors.success;
       case 'rejected':
-        color = Colors.red;
-        break;
+        color = AppColors.error;
       case 'completed':
-        color = Colors.blue;
-        break;
+        color = AppColors.info;
       default:
-        color = Colors.grey;
+        color = AppColors.textSecondary;
     }
 
     return Container(
@@ -235,11 +227,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
       ),
       child: Text(
         status.toUpperCase(),
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-          color: color,
-        ),
+        style: AppTypography.labelSmall.copyWith(color: color),
       ),
     );
   }
