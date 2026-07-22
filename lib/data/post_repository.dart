@@ -162,6 +162,14 @@ class PostRepository {
     });
   }
 
+  Future<void> updateFoodPost(FoodPostModel post) async {
+    await _firestore.collection('food_posts').doc(post.id).update(post.toMap());
+  }
+
+  Future<void> deleteFoodPost(String postId) async {
+    await _firestore.collection('food_posts').doc(postId).delete();
+  }
+
   /// Fetches food posts by their document IDs (for favorites).
   Future<List<FoodPostModel>> getFoodPostsByIds(List<String> postIds) async {
     if (postIds.isEmpty) return [];

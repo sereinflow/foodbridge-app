@@ -47,7 +47,7 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<bool> register(String email, String password, String name) async {
+  Future<bool> register(String email, String password, String name, String role) async {
     isLoading.value = true;
     try {
       UserCredential cred = await _auth.createUserWithEmailAndPassword(
@@ -64,7 +64,8 @@ class AuthController extends GetxController {
         uid: user.uid,
         name: name,
         email: email,
-        role: 'user',
+        role: role,
+        userType: role,
         createdAt: DateTime.now(),
       );
 
