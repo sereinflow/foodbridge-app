@@ -8,7 +8,7 @@ class StarRatingWidget extends StatelessWidget {
   final bool interactive;
   final ValueChanged<int>? onRatingChanged;
   final Color activeColor;
-  final Color inactiveColor;
+  final Color? inactiveColor;
 
   const StarRatingWidget({
     super.key,
@@ -18,7 +18,7 @@ class StarRatingWidget extends StatelessWidget {
     this.interactive = false,
     this.onRatingChanged,
     this.activeColor = AppColors.accent,
-    this.inactiveColor = AppColors.textMuted,
+    this.inactiveColor,
   });
 
   @override
@@ -43,7 +43,7 @@ class StarRatingWidget extends StatelessWidget {
                       ? Icons.star_half_rounded
                       : Icons.star_outline_rounded,
               size: size,
-              color: isFilled || isHalf ? activeColor : inactiveColor,
+              color: isFilled || isHalf ? activeColor : (inactiveColor ?? AppColors.textMuted),
             ),
           ),
         );

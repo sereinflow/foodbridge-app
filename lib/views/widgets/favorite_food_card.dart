@@ -44,7 +44,7 @@ class FavoriteFoodCard extends StatelessWidget {
                   errorBuilder: (_, _, _) => Container(
                     height: 160,
                     color: AppColors.surfaceMuted,
-                    child: const Icon(Icons.image_not_supported,
+                    child: Icon(Icons.image_not_supported,
                         color: AppColors.textMuted),
                   ),
                 ),
