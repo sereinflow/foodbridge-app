@@ -98,6 +98,28 @@ class CreatePostController extends GetxController {
     }
   }
 
+  var isEdit = false.obs;
+  FoodPostModel? _editingPost;
+
+  void initForEdit(FoodPostModel post) {
+    isEdit.value = true;
+    _editingPost = post;
+
+    selectedPostType.value = 0;
+    titleController.text = post.title;
+    descriptionController.text = post.description;
+    quantityController.text = post.quantity;
+    locationController.text = post.pickupLocation;
+    priceController.text = post.price.toStringAsFixed(0);
+    foodType.value = post.type;
+    selectedTags.assignAll(post.tags);
+    expiryDate.value = post.expiryDate;
+    temperatureController.text = post.storageTemperature ?? '';
+    imageUrlController.text = post.imageUrl;
+    isUsingUrl.value = true;
+    isSafetyVerified.value = true;
+  }
+
   Future<void> createPost() async {
     if (titleController.text.isEmpty || descriptionController.text.isEmpty) {
       Get.snackbar("Error", "Title and Description are required");
@@ -117,7 +139,7 @@ class CreatePostController extends GetxController {
     try {
       isLoading.value = true;
       String userId = _repository.currentUserId;
-      String postId = const Uuid().v4();
+      String postId = isEdit.value && _editingPost != null ? _editingPost!.id : const Uuid().v4();
 
       String? imageUrl;
       if (isUsingUrl.value) {
@@ -126,6 +148,7 @@ class CreatePostController extends GetxController {
         imageUrl = await _uploadImage(
           selectedPostType.value == 0 ? 'food_posts' : 'campaigns',
         );
+        imageUrl ??= isEdit.value && _editingPost != null ? _editingPost!.imageUrl : null;
       }
 
       if (imageUrl == null) return;
@@ -142,27 +165,44 @@ class CreatePostController extends GetxController {
           }
         }
 
-        final post = FoodPostModel(
-          id: postId,
-          userId: userId,
-          userName: _authController.userModel.value!.name,
-          type: foodType.value,
-          title: titleController.text,
-          description: descriptionController.text,
-          quantity: quantityController.text,
-          pickupLocation: locationController.text,
-          imageUrl: imageUrl,
-          status: 'Available',
-          createdAt: DateTime.now(),
-          price: double.tryParse(priceController.text) ?? 0.0,
-          tags: selectedTags.toList(),
-          expiryDate: expiryDate.value,
-          storageTemperature: temperatureController.text.trim().isEmpty ? null : temperatureController.text.trim(),
-          safetyAlerts: safetyAlerts,
-        );
-
-        await _repository.createFoodPost(post);
-        Get.snackbar("Success", "Food post created successfully!");
+        if (isEdit.value && _editingPost != null) {
+          final updatedPost = _editingPost!.copyWith(
+            title: titleController.text,
+            description: descriptionController.text,
+            quantity: quantityController.text,
+            pickupLocation: locationController.text,
+            price: double.tryParse(priceController.text) ?? 0.0,
+            type: foodType.value,
+            tags: selectedTags.toList(),
+            expiryDate: expiryDate.value,
+            storageTemperature: temperatureController.text.trim().isEmpty ? null : temperatureController.text.trim(),
+            imageUrl: imageUrl,
+            safetyAlerts: safetyAlerts,
+          );
+          await _repository.updateFoodPost(updatedPost);
+          Get.snackbar("Success", "Food post updated successfully!");
+        } else {
+          final post = FoodPostModel(
+            id: postId,
+            userId: userId,
+            userName: _authController.userModel.value!.name,
+            type: foodType.value,
+            title: titleController.text,
+            description: descriptionController.text,
+            quantity: quantityController.text,
+            pickupLocation: locationController.text,
+            imageUrl: imageUrl,
+            status: 'Available',
+            createdAt: DateTime.now(),
+            price: double.tryParse(priceController.text) ?? 0.0,
+            tags: selectedTags.toList(),
+            expiryDate: expiryDate.value,
+            storageTemperature: temperatureController.text.trim().isEmpty ? null : temperatureController.text.trim(),
+            safetyAlerts: safetyAlerts,
+          );
+          await _repository.createFoodPost(post);
+          Get.snackbar("Success", "Food post created successfully!");
+        }
       } else {
         final campaign = CampaignModel(
           id: postId,
@@ -183,20 +223,22 @@ class CreatePostController extends GetxController {
         Get.snackbar("Success", "Campaign created successfully!");
       }
 
-      _clearForm();
+      clearForm();
       if (Get.isRegistered<HomeController>()) {
         Get.find<HomeController>().fetchData();
       }
 
       Get.back();
     } catch (e) {
-      Get.snackbar("Error", "Failed to create post: $e");
+      Get.snackbar("Error", "Failed to save post: $e");
     } finally {
       isLoading.value = false;
     }
   }
 
-  void _clearForm() {
+  void clearForm() {
+    isEdit.value = false;
+    _editingPost = null;
     titleController.clear();
     descriptionController.clear();
     quantityController.clear();

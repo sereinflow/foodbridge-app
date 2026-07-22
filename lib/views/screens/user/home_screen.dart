@@ -8,6 +8,7 @@ import 'package:food_bridge/views/screens/user/food_post_details_screen.dart';
 import 'package:food_bridge/views/screens/user/post_details_screen.dart';
 import 'package:food_bridge/views/screens/post/create_post_screen.dart';
 import 'package:food_bridge/controllers/auth_controller.dart';
+import 'package:food_bridge/views/screens/chat/chat_list_screen.dart';
 import 'package:get/get.dart';
 
 class UserHomeScreen extends StatefulWidget {
@@ -46,7 +47,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               _buildFilterChips(),
               const SizedBox(height: 20),
 
-              const Text(
+              Text(
                 'Donation Rising',
                 style: TextStyle(
                   fontSize: 18,
@@ -58,7 +59,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               _buildUrgentCausesList(),
               const SizedBox(height: 25),
 
-              const Text(
+              Text(
                 'Food Share',
                 style: TextStyle(
                   fontSize: 18,
@@ -140,9 +141,18 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                 ),
               ),
             ),
-            GestureDetector(
-              onTap: () => _showFilterBottomSheet(context),
-              child: _buildIconBox(Icons.filter_alt_outlined),
+            Row(
+              children: [
+                GestureDetector(
+                  onTap: () => Get.to(() => const ChatListScreen()),
+                  child: _buildIconBox(Icons.chat_bubble_outline_rounded),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () => _showFilterBottomSheet(context),
+                  child: _buildIconBox(Icons.filter_alt_outlined),
+                ),
+              ],
             ),
           ],
         ),
@@ -165,7 +175,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
   Widget _buildHeroText() {
     return RichText(
       text: TextSpan(
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 24,
           color: AppColors.textPrimary,
           height: 1.3,
@@ -195,9 +205,9 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
   Widget _buildSearchBar() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: Get.isDarkMode ? Colors.white10 : Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withValues(alpha: 0.05),
@@ -282,9 +292,9 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       child: Container(
         width: 260,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.card,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade100),
+          border: Border.all(color: Get.isDarkMode ? Colors.white10 : Colors.grey.shade100),
           boxShadow: [
             BoxShadow(
               color: Colors.grey.withValues(alpha: 0.1),
@@ -444,14 +454,17 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       isExpiringSoon = hoursUntilExpiry < 24 && hoursUntilExpiry >= 0;
     }
 
+    final currentUserId = Get.find<AuthController>().userModel.value?.uid ?? '';
+    final isOwnPost = item.userId == currentUserId;
+
     return GestureDetector(
       onTap: () => Get.to(() => FoodPostDetailsScreen(post: item)),
       child: Container(
         width: 200,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.card,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade100), // Fixed border color
+          border: Border.all(color: Get.isDarkMode ? Colors.white10 : Colors.grey.shade100), // Fixed border color
           boxShadow: [
             BoxShadow(
               color: Colors.grey.withValues(alpha: 0.1),
@@ -530,6 +543,22 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                             style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
                           ),
                         ],
+                      ),
+                    ),
+                  ),
+                if (isOwnPost)
+                  Positioned(
+                    bottom: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        "Your Post",
+                        style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),

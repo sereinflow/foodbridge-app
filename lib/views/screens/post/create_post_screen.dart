@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:food_bridge/controllers/create_post_controller.dart';
+import 'package:food_bridge/models/food_post_model.dart';
 import 'package:food_bridge/utils/theme/colors.dart';
 import 'package:food_bridge/views/widgets/custom_bw_button.dart';
 import 'package:food_bridge/views/widgets/custom_textfield.dart';
 import 'package:get/get.dart';
 
 class CreatePostScreen extends StatefulWidget {
-  const CreatePostScreen({super.key});
+  final FoodPostModel? existingPost;
+
+  const CreatePostScreen({super.key, this.existingPost});
 
   @override
   State<CreatePostScreen> createState() => _CreatePostScreenState();
@@ -20,11 +23,26 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   final Color shadowDark = Colors.black.withValues(alpha: 0.12);
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.existingPost != null) {
+        controller.initForEdit(widget.existingPost!);
+      } else {
+        controller.clearForm();
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
       appBar: AppBar(
-        title: const Text("Create Post", style: TextStyle(color: Colors.black)),
+        title: Obx(() => Text(
+              controller.isEdit.value ? "Edit Post" : "Create Post",
+              style: const TextStyle(color: Colors.black),
+            )),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
@@ -38,15 +56,17 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildTypeToggle(),
-              const SizedBox(height: 20),
+              if (!controller.isEdit.value) ...[
+                _buildTypeToggle(),
+                const SizedBox(height: 20),
+              ],
               _buildImagePicker(),
               const SizedBox(height: 20),
               _buildForm(),
               const SizedBox(height: 30),
               CustomBWButton(
                 isLoading: controller.isLoading.value,
-                title: "Post Now",
+                title: controller.isEdit.value ? "Update Post" : "Post Now",
                 bgColor: AppColors.primary,
                 shadowLight: shadowLight,
                 shadowDark: shadowDark,

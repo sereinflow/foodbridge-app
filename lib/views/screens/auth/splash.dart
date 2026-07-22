@@ -3,8 +3,10 @@ import 'package:food_bridge/controllers/auth_controller.dart';
 import 'package:food_bridge/utils/theme/colors.dart';
 import 'package:food_bridge/views/screens/admin/admin_dashboard_screen.dart';
 import 'package:food_bridge/views/screens/auth/login_screen.dart';
+import 'package:food_bridge/views/screens/auth/onboarding_screen.dart';
 import 'package:food_bridge/views/screens/user/main_layout_screen.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -45,25 +47,31 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
-  void verifyToken() {
-    controller
-        .isUserLoggedIn()
-        .then((role) {
-          if (!mounted) return;
-          if (role == 'user') {
-            Get.offAll(() => MainLayoutScreen());
-          } else if (role == 'admin') {
-            Get.offAll(() => const AdminDashboardScreen());
-          } else {
-            Get.offAll(() => LoginScreen());
-          }
-        })
-        .catchError((e) {
-          debugPrint('Error verifying token: $e');
-          if (mounted) {
-            Get.offAll(() => LoginScreen());
-          }
-        });
+  void verifyToken() async {
+    try {
+      final role = await controller.isUserLoggedIn();
+      if (!mounted) return;
+      if (role != null) {
+        if (role == 'admin') {
+          Get.offAll(() => const AdminDashboardScreen());
+        } else {
+          Get.offAll(() => MainLayoutScreen());
+        }
+      } else {
+        final prefs = await SharedPreferences.getInstance();
+        final onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
+        if (onboardingCompleted) {
+          Get.offAll(() => const LoginScreen());
+        } else {
+          Get.offAll(() => const OnboardingScreen());
+        }
+      }
+    } catch (e) {
+      debugPrint('Error verifying token: $e');
+      if (mounted) {
+        Get.offAll(() => const LoginScreen());
+      }
+    }
   }
 
   @override

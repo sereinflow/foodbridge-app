@@ -167,7 +167,7 @@ class UserStatsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: badgeColor.withValues(alpha: 0.15)),
         boxShadow: [
@@ -206,7 +206,7 @@ class UserStatsScreen extends StatelessWidget {
                     ),
                     Text(
                       '$score / $nextGoal XP',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textSecondary,
@@ -225,7 +225,7 @@ class UserStatsScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                const Text(
+                Text(
                   'List foods and complete collections to gain XP!',
                   style: TextStyle(
                     fontSize: 10,
@@ -255,7 +255,7 @@ class UserStatsScreen extends StatelessWidget {
       height: 280,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -268,7 +268,7 @@ class UserStatsScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Impact Distribution',
             style: TextStyle(
               fontSize: 16,
@@ -297,7 +297,7 @@ class UserStatsScreen extends StatelessWidget {
                           padding: const EdgeInsets.only(top: 8.0),
                           child: Text(
                             chartData.keys.elementAt(index),
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.textSecondary,
                               fontWeight: FontWeight.bold,
                               fontSize: 10,
@@ -314,7 +314,7 @@ class UserStatsScreen extends StatelessWidget {
                       getTitlesWidget: (double value, TitleMeta meta) {
                         return Text(
                           value.toInt().toString(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.textMuted,
                             fontSize: 10,
                           ),

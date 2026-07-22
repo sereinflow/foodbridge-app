@@ -18,9 +18,9 @@ class LoginScreen extends StatelessWidget {
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
 
-    final textColor = const Color(0xFF333333);
-    final shadowLight = Colors.white.withValues(alpha: 0.9);
-    final shadowDark = Colors.black.withValues(alpha: 0.12);
+    final textColor = AppColors.textPrimary;
+    final shadowLight = Get.isDarkMode ? Colors.black12 : Colors.white.withValues(alpha: 0.9);
+    final shadowDark = Get.isDarkMode ? Colors.black26 : Colors.black.withValues(alpha: 0.12);
 
     return Scaffold(
       backgroundColor: AppColors.primary,
@@ -43,7 +43,7 @@ class LoginScreen extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.white.withValues(alpha: 0.85),
+                color: AppColors.card.withValues(alpha: 0.85),
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
@@ -60,7 +60,7 @@ class LoginScreen extends StatelessWidget {
                     height: 120,
                     width: 120,
                     decoration: BoxDecoration(
-                      color: Color(0xFFEFF3FA),
+                      color: AppColors.background,
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
@@ -87,7 +87,7 @@ class LoginScreen extends StatelessWidget {
                   const SizedBox(height: 20),
 
                   Text(
-                    "Good to see you!",
+                    'login_welcome'.tr,
                     style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
@@ -96,7 +96,7 @@ class LoginScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "Login to continue",
+                    'login_subtitle'.tr,
                     style: TextStyle(
                       fontSize: 16,
                       color: textColor.withValues(alpha: 0.6),
@@ -108,8 +108,8 @@ class LoginScreen extends StatelessWidget {
                   CustomTextField(
                     controller: emailController,
                     icon: Icons.email_outlined,
-                    hint: 'E-Mail',
-                    bgColor: AppColors.white,
+                    hint: 'email_hint'.tr,
+                    bgColor: AppColors.background,
                     shadowLight: shadowLight,
                     shadowDark: shadowDark,
                     textColor: textColor,
@@ -120,8 +120,8 @@ class LoginScreen extends StatelessWidget {
                   CustomPasswordField(
                     controller: passwordController,
                     icon: Icons.lock_outline,
-                    hint: 'Password',
-                    bgColor: AppColors.white,
+                    hint: 'password_hint'.tr,
+                    bgColor: AppColors.background,
                     shadowLight: shadowLight,
                     shadowDark: shadowDark,
                     textColor: textColor,
@@ -136,7 +136,7 @@ class LoginScreen extends StatelessWidget {
                         Get.to(() => ForgotPasswordPage());
                       },
                       child: Text(
-                        "Forgot Password?",
+                        'forgot_password'.tr,
                         style: TextStyle(
                           color: textColor.withValues(alpha: 0.7),
                         ),
@@ -149,8 +149,8 @@ class LoginScreen extends StatelessWidget {
                   Obx(
                     () => CustomBWButton(
                       isLoading: authController.isLoading.value,
-                      title: "Login",
-                      bgColor: AppColors.white,
+                      title: 'login'.tr,
+                      bgColor: AppColors.background,
                       shadowLight: shadowLight,
                       shadowDark: shadowDark,
                       textColor: textColor,
@@ -160,7 +160,7 @@ class LoginScreen extends StatelessWidget {
 
                         if (email.isEmpty || password.isEmpty) {
                           Get.snackbar(
-                            "Error",
+                            'error'.tr,
                             "Please fill in all fields",
                             snackPosition: SnackPosition.BOTTOM,
                             backgroundColor: Colors.redAccent,
@@ -174,23 +174,20 @@ class LoginScreen extends StatelessWidget {
                           password,
                         );
 
-                        if (isOkay == "user") {
+                        if (isOkay != null && isOkay != "error") {
                           Get.snackbar(
-                            "Success",
+                            'success'.tr,
                             "Logged in successfully",
                             snackPosition: SnackPosition.BOTTOM,
                           );
-                          Get.offAll(() => MainLayoutScreen());
-                        } else if (isOkay == "admin") {
-                          Get.snackbar(
-                            "Success",
-                            "Logged in successfully",
-                            snackPosition: SnackPosition.BOTTOM,
-                          );
-                          Get.offAll(() => const AdminDashboardScreen());
+                          if (isOkay == "admin") {
+                            Get.offAll(() => const AdminDashboardScreen());
+                          } else {
+                            Get.offAll(() => MainLayoutScreen());
+                          }
                         } else {
                           Get.snackbar(
-                            "Error",
+                            'error'.tr,
                             "Login failed. Please check your credentials.",
                             snackPosition: SnackPosition.BOTTOM,
                             backgroundColor: Colors.redAccent,
@@ -207,7 +204,7 @@ class LoginScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "Don't have an account? ",
+                        'dont_have_acc'.tr,
                         style: TextStyle(
                           color: textColor.withValues(alpha: 0.6),
                         ),
@@ -217,8 +214,8 @@ class LoginScreen extends StatelessWidget {
                           Get.to(() => SignupScreen());
                         },
                         child: Text(
-                          "Register",
-                          style: TextStyle(
+                          'register'.tr,
+                          style: const TextStyle(
                             color: AppColors.primary,
                             fontWeight: FontWeight.bold,
                           ),

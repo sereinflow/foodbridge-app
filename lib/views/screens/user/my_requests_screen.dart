@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:food_bridge/controllers/review_controller.dart';
 import 'package:food_bridge/data/post_repository.dart';
@@ -6,6 +7,8 @@ import 'package:food_bridge/models/review_model.dart';
 import 'package:food_bridge/utils/theme/colors.dart';
 import 'package:food_bridge/utils/theme/spacing.dart';
 import 'package:food_bridge/utils/theme/typography.dart';
+import 'package:food_bridge/views/screens/chat/chat_screen.dart';
+import 'package:food_bridge/views/screens/user/payment_screen.dart';
 import 'package:food_bridge/views/widgets/empty_state_widget.dart';
 import 'package:food_bridge/views/widgets/loading_state_widget.dart';
 import 'package:food_bridge/views/widgets/review_dialog.dart';
@@ -175,26 +178,71 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                     Text(request.postType, style: AppTypography.titleMedium),
                   ],
                 ),
-                if (canReview)
-                  ElevatedButton.icon(
-                    onPressed: () => _showReviewDialog(request),
-                    icon: const Icon(Icons.star_outline, size: 16),
-                    label: const Text('Rate'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
+                Row(
+                  children: [
+                    if (request.status == 'Approved' || request.status == 'Completed') ...[
+                      IconButton(
+                        icon: const Icon(Icons.chat_bubble_outline, color: AppColors.primary),
+                        onPressed: () async {
+                          Get.dialog(
+                            const Center(child: CircularProgressIndicator()),
+                            barrierDismissible: false,
+                          );
+                          final donorDoc = await FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(request.donorId)
+                              .get();
+                          Get.back(); // close loading indicator
+                          final donorName = donorDoc.exists
+                              ? (donorDoc.data()?['name'] ?? 'Donor')
+                              : 'Donor';
+                          Get.to(() => ChatScreen(
+                                peerId: request.donorId,
+                                peerName: donorName,
+                              ));
+                        },
                       ),
-                    ),
-                  )
-                else if (request.status == 'Completed' &&
-                    (_hasReviewed[request.id] ?? false))
-                  Text(
-                    'Reviewed',
-                    style: AppTypography.labelSmall.copyWith(
-                      color: AppColors.success,
-                    ),
-                  ),
+                      const SizedBox(width: 8),
+                    ],
+                    if (request.status == 'Approved' && request.postType == 'Sale') ...[
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Get.to(() => PaymentScreen(request: request))?.then((_) => _fetchRequests());
+                        },
+                        icon: const Icon(Icons.payment_outlined, size: 16),
+                        label: const Text('Pay Now'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.purple,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    if (canReview)
+                      ElevatedButton.icon(
+                        onPressed: () => _showReviewDialog(request),
+                        icon: const Icon(Icons.star_outline, size: 16),
+                        label: const Text('Rate'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
+                      )
+                    else if (request.status == 'Completed' &&
+                        (_hasReviewed[request.id] ?? false))
+                      Text(
+                        'Reviewed',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: AppColors.success,
+                        ),
+                      ),
+                  ],
+                ),
               ],
             ),
           ],
@@ -210,6 +258,12 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
         color = AppColors.warning;
       case 'approved':
         color = AppColors.success;
+      case 'payment required':
+        color = Colors.purple;
+      case 'paid':
+        color = Colors.blue;
+      case 'ready for pickup':
+        color = Colors.indigo;
       case 'rejected':
         color = AppColors.error;
       case 'completed':

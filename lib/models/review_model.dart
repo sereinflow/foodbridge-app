@@ -65,18 +65,20 @@ class ReviewModel {
   factory ReviewModel.fromMap(Map<String, dynamic> map, String id) {
     return ReviewModel(
       id: id,
-      reviewerId: map['reviewerId'] ?? '',
+      reviewerId: map['reviewerId'] ?? map['reviewerID'] ?? '',
       reviewerName: map['reviewerName'] ?? '',
-      reviewedUserId: map['reviewedUserId'] ?? '',
+      reviewedUserId: map['reviewedUserId'] ?? map['reviewedUserID'] ?? '',
       reviewedUserName: map['reviewedUserName'] ?? '',
       rating: map['rating'] is int
           ? map['rating'] as int
           : (map['rating'] as num?)?.toInt() ?? 0,
       comment: map['comment'],
       type: ReviewTypeExtension.fromString(map['type'] ?? ''),
-      requestId: map['requestId'] ?? '',
+      requestId: map['requestId'] ?? map['transactionID'] ?? '',
       postId: map['postId'] ?? '',
-      createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      createdAt: (map['createdAt'] as Timestamp?)?.toDate() ??
+          (map['timestamp'] as Timestamp?)?.toDate() ??
+          DateTime.now(),
       updatedAt: (map['updatedAt'] as Timestamp?)?.toDate(),
     );
   }
@@ -84,15 +86,18 @@ class ReviewModel {
   Map<String, dynamic> toMap() {
     return {
       'reviewerId': reviewerId,
+      'reviewerID': reviewerId,
       'reviewerName': reviewerName,
       'reviewedUserId': reviewedUserId,
-      'reviewedUserName': reviewedUserName,
+      'reviewedUserID': reviewedUserId,
       'rating': rating,
       'comment': comment,
       'type': type.value,
       'requestId': requestId,
+      'transactionID': requestId,
       'postId': postId,
       'createdAt': Timestamp.fromDate(createdAt),
+      'timestamp': Timestamp.fromDate(createdAt),
       'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
     };
   }

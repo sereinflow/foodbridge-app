@@ -10,6 +10,8 @@ import 'package:food_bridge/views/screens/admin/admin_content_screen.dart';
 import 'package:food_bridge/views/screens/admin/admin_feedback_screen.dart';
 import 'package:food_bridge/views/screens/admin/admin_requests_screen.dart';
 import 'package:food_bridge/views/screens/admin/admin_analytics_screen.dart';
+import 'package:food_bridge/views/screens/admin/admin_reports_screen.dart';
+import 'package:food_bridge/views/screens/admin/admin_refunds_screen.dart';
 import 'package:get/get.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
@@ -36,7 +38,7 @@ class AdminDashboardScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Overview',
                       style: TextStyle(
                         fontSize: 18,
@@ -93,7 +95,7 @@ class AdminDashboardScreen extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 30),
-                    const Text(
+                    Text(
                       'Quick Actions',
                       style: TextStyle(
                         fontSize: 18,
@@ -154,6 +156,20 @@ class AdminDashboardScreen extends StatelessWidget {
                           icon: Icons.chat_bubble_outline_rounded,
                           color: Colors.amber.shade800,
                           onTap: () => Get.to(() => const AdminFeedbackScreen()),
+                        ),
+                        _buildGridMenuItem(
+                          title: "Safety Reports",
+                          subtitle: "Review flagged posts & users",
+                          icon: Icons.security_rounded,
+                          color: AppColors.error,
+                          onTap: () => Get.to(() => const AdminReportsScreen()),
+                        ),
+                        _buildGridMenuItem(
+                          title: "Manage Refunds",
+                          subtitle: "Review prepaid cancellations",
+                          icon: Icons.currency_exchange_outlined,
+                          color: Colors.purpleAccent,
+                          onTap: () => Get.to(() => const AdminRefundsScreen()),
                         ),
                       ],
                     ),
@@ -240,7 +256,7 @@ class AdminDashboardScreen extends StatelessWidget {
   ) {
     return InteractiveCard(
       onTap: onTap,
-      color: Colors.white,
+      color: AppColors.card,
       activeColor: color.withValues(alpha: 0.06),
       borderRadius: 20,
       padding: const EdgeInsets.all(16),
@@ -268,7 +284,7 @@ class AdminDashboardScreen extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
@@ -277,7 +293,7 @@ class AdminDashboardScreen extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               color: AppColors.textSecondary,
               fontWeight: FontWeight.w500,
@@ -297,7 +313,7 @@ class AdminDashboardScreen extends StatelessWidget {
   }) {
     return InteractiveCard(
       onTap: onTap,
-      color: Colors.white,
+      color: AppColors.card,
       activeColor: color.withValues(alpha: 0.06),
       borderRadius: 20,
       padding: const EdgeInsets.all(12),
@@ -320,7 +336,7 @@ class AdminDashboardScreen extends StatelessWidget {
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
@@ -331,7 +347,7 @@ class AdminDashboardScreen extends StatelessWidget {
                 subtitle,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10,
                   color: AppColors.textSecondary,
                   height: 1.2,

@@ -7,6 +7,7 @@ import 'package:food_bridge/models/review_model.dart';
 import 'package:food_bridge/utils/theme/colors.dart';
 import 'package:food_bridge/utils/theme/spacing.dart';
 import 'package:food_bridge/utils/theme/typography.dart';
+import 'package:food_bridge/views/screens/chat/chat_screen.dart';
 import 'package:food_bridge/views/widgets/loading_state_widget.dart';
 import 'package:food_bridge/views/widgets/review_dialog.dart';
 import 'package:get/get.dart';
@@ -199,31 +200,166 @@ class _PostRequestsScreenState extends State<PostRequestsScreen> {
                 ],
               )
             else if (request.status == 'Approved')
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => _updateStatus(request.id, 'Completed'),
-                  child: const Text('Mark as Completed'),
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: request.postType == 'Sale'
+                        ? Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.purple.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.purple.withValues(alpha: 0.3)),
+                            ),
+                            alignment: Alignment.center,
+                            child: const Text(
+                              'Awaiting Payment',
+                              style: TextStyle(
+                                color: Colors.purple,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          )
+                        : ElevatedButton(
+                            onPressed: () => _updateStatus(request.id, 'Ready for Pickup'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.indigo,
+                            ),
+                            child: const Text('Mark as Ready for Pickup'),
+                          ),
+                  ),
+                  const SizedBox(width: 12),
+                  IconButton(
+                    icon: const Icon(Icons.chat_bubble_outline, color: AppColors.primary),
+                    onPressed: () {
+                      Get.to(() => ChatScreen(
+                            peerId: request.requesterId,
+                            peerName: request.requesterName,
+                          ));
+                    },
+                  ),
+                ],
+              )
+            else if (request.status == 'Paid')
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => _updateStatus(request.id, 'Ready for Pickup'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.indigo,
+                      ),
+                      child: const Text('Mark as Ready for Pickup'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  IconButton(
+                    icon: const Icon(Icons.chat_bubble_outline, color: AppColors.primary),
+                    onPressed: () {
+                      Get.to(() => ChatScreen(
+                            peerId: request.requesterId,
+                            peerName: request.requesterName,
+                          ));
+                    },
+                  ),
+                ],
+              )
+            else if (request.status == 'Ready for Pickup')
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => _updateStatus(request.id, 'Completed'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.success,
+                      ),
+                      child: const Text('Mark as Completed'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  IconButton(
+                    icon: const Icon(Icons.chat_bubble_outline, color: AppColors.primary),
+                    onPressed: () {
+                      Get.to(() => ChatScreen(
+                            peerId: request.requesterId,
+                            peerName: request.requesterName,
+                          ));
+                    },
+                  ),
+                ],
               )
             else if (canReview)
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () => _showReviewDialog(request),
-                  icon: const Icon(Icons.star_outline),
-                  label: const Text('Rate Volunteer'),
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _showReviewDialog(request),
+                      icon: const Icon(Icons.star_outline),
+                      label: const Text('Rate Volunteer'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  IconButton(
+                    icon: const Icon(Icons.chat_bubble_outline, color: AppColors.primary),
+                    onPressed: () {
+                      Get.to(() => ChatScreen(
+                            peerId: request.requesterId,
+                            peerName: request.requesterName,
+                          ));
+                    },
+                  ),
+                ],
               )
             else if (request.status == 'Completed' &&
                 (_hasReviewed[request.id] ?? false))
-              Center(
-                child: Text(
-                  'Review submitted',
-                  style: AppTypography.labelSmall.copyWith(
-                    color: AppColors.success,
+              Row(
+                children: [
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        'Review submitted',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: AppColors.success,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  IconButton(
+                    icon: const Icon(Icons.chat_bubble_outline, color: AppColors.primary),
+                    onPressed: () {
+                      Get.to(() => ChatScreen(
+                            peerId: request.requesterId,
+                            peerName: request.requesterName,
+                          ));
+                    },
+                  ),
+                ],
+              )
+            else if (request.status == 'Completed')
+              Row(
+                children: [
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        'Completed',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: AppColors.success,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  IconButton(
+                    icon: const Icon(Icons.chat_bubble_outline, color: AppColors.primary),
+                    onPressed: () {
+                      Get.to(() => ChatScreen(
+                            peerId: request.requesterId,
+                            peerName: request.requesterName,
+                          ));
+                    },
+                  ),
+                ],
               ),
           ],
         ),
@@ -251,6 +387,12 @@ class _PostRequestsScreenState extends State<PostRequestsScreen> {
         color = AppColors.warning;
       case 'approved':
         color = AppColors.success;
+      case 'payment required':
+        color = Colors.purple;
+      case 'paid':
+        color = Colors.blue;
+      case 'ready for pickup':
+        color = Colors.indigo;
       case 'rejected':
         color = AppColors.error;
       case 'completed':

@@ -48,7 +48,7 @@ class MainLayoutScreen extends StatelessWidget {
                     fontSize: 11,
                   );
                 }
-                return const TextStyle(
+                return TextStyle(
                   color: AppColors.textSecondary,
                   fontWeight: FontWeight.w500,
                   fontSize: 11,
@@ -61,7 +61,7 @@ class MainLayoutScreen extends StatelessWidget {
                     size: 24,
                   );
                 }
-                return const IconThemeData(
+                return IconThemeData(
                   color: AppColors.textSecondary,
                   size: 24,
                 );

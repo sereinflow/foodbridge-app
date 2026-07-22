@@ -15,10 +15,9 @@ class ForgotPasswordPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Fixed light theme only
-    final bgColor = const Color(0xFFEFF3FA);
-    final textColor = const Color(0xFF333333);
-    final shadowLight = Colors.white.withValues(alpha: 0.9);
-    final shadowDark = Colors.black.withValues(alpha: 0.12);
+    final textColor = AppColors.textPrimary;
+    final shadowLight = Get.isDarkMode ? Colors.black12 : Colors.white.withValues(alpha: 0.9);
+    final shadowDark = Get.isDarkMode ? Colors.black26 : Colors.black.withValues(alpha: 0.12);
 
     return Scaffold(
       backgroundColor: AppColors.primary,
@@ -34,7 +33,7 @@ class ForgotPasswordPage extends StatelessWidget {
               curve: Curves.easeInOut,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: bgColor.withValues(alpha: 0.9),
+                color: AppColors.card.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: [
                   BoxShadow(
@@ -52,7 +51,7 @@ class ForgotPasswordPage extends StatelessWidget {
                     height: 90,
                     width: 90,
                     decoration: BoxDecoration(
-                      color: bgColor,
+                      color: AppColors.background,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
@@ -103,7 +102,7 @@ class ForgotPasswordPage extends StatelessWidget {
                     controller: emailController,
                     icon: Icons.email_outlined,
                     hint: 'E-Mail',
-                    bgColor: bgColor,
+                    bgColor: AppColors.background,
                     shadowLight: shadowLight,
                     shadowDark: shadowDark,
                     textColor: textColor,
@@ -116,7 +115,7 @@ class ForgotPasswordPage extends StatelessWidget {
                     () => CustomBWButton(
                       isLoading: authController.isLoading.value,
                       title: "Send Reset Link",
-                      bgColor: bgColor,
+                      bgColor: AppColors.background,
                       shadowLight: shadowLight,
                       shadowDark: shadowDark,
                       textColor: textColor,

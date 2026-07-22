@@ -16,24 +16,26 @@ class SignupScreen extends StatelessWidget {
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
+  final selectedRole = 'donor'.obs;
+
   @override
   Widget build(BuildContext context) {
-    final textColor = const Color(0xFF333333);
-    final shadowLight = Colors.white.withValues(alpha: 0.9);
-    final shadowDark = Colors.black.withValues(alpha: 0.12);
+    final textColor = AppColors.textPrimary;
+    final shadowLight = Get.isDarkMode ? Colors.black12 : Colors.white.withValues(alpha: 0.9);
+    final shadowDark = Get.isDarkMode ? Colors.black26 : Colors.black.withValues(alpha: 0.12);
     return Scaffold(
       backgroundColor: AppColors.primary,
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: BoxDecoration(color: AppColors.primary),
+        decoration: const BoxDecoration(color: AppColors.primary),
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.white.withValues(alpha: 0.9),
+                color: AppColors.card.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: [
                   BoxShadow(
@@ -47,7 +49,7 @@ class SignupScreen extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    "Create Account",
+                    'create_account'.tr,
                     style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
@@ -56,7 +58,7 @@ class SignupScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "Register to continue",
+                    'register_subtitle'.tr,
                     style: TextStyle(
                       fontSize: 16,
                       color: textColor.withValues(alpha: 0.6),
@@ -68,8 +70,8 @@ class SignupScreen extends StatelessWidget {
                   CustomTextField(
                     controller: nameController,
                     icon: Icons.person_outline,
-                    hint: 'Full Name',
-                    bgColor: AppColors.white,
+                    hint: 'fullname_hint'.tr,
+                    bgColor: AppColors.background,
                     shadowLight: shadowLight,
                     shadowDark: shadowDark,
                     textColor: textColor,
@@ -80,8 +82,8 @@ class SignupScreen extends StatelessWidget {
                   CustomTextField(
                     controller: emailController,
                     icon: Icons.email_outlined,
-                    hint: 'E-Mail',
-                    bgColor: AppColors.white,
+                    hint: 'email_hint'.tr,
+                    bgColor: AppColors.background,
                     shadowLight: shadowLight,
                     shadowDark: shadowDark,
                     textColor: textColor,
@@ -92,8 +94,8 @@ class SignupScreen extends StatelessWidget {
                   CustomPasswordField(
                     controller: passwordController,
                     icon: Icons.lock_outline,
-                    hint: 'Password',
-                    bgColor: AppColors.white,
+                    hint: 'password_hint'.tr,
+                    bgColor: AppColors.background,
                     shadowLight: shadowLight,
                     shadowDark: shadowDark,
                     textColor: textColor,
@@ -104,20 +106,64 @@ class SignupScreen extends StatelessWidget {
                   CustomPasswordField(
                     controller: confirmPasswordController,
                     icon: Icons.lock_outline,
-                    hint: 'Confirm Password',
-                    bgColor: AppColors.white,
+                    hint: 'confirm_password_hint'.tr,
+                    bgColor: AppColors.background,
                     shadowLight: shadowLight,
                     shadowDark: shadowDark,
                     textColor: textColor,
                   ),
+
+                  const SizedBox(height: 20),
+
+                  // Role Selection Dropdown
+                  Obx(() => Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.background,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: shadowDark,
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButtonFormField<String>(
+                            value: selectedRole.value,
+                            icon: const Icon(Icons.arrow_drop_down, color: AppColors.primary),
+                            decoration: InputDecoration(
+                              icon: const Icon(Icons.assignment_ind_outlined, color: AppColors.primary),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              contentPadding: EdgeInsets.zero,
+                              labelText: 'role_select'.tr,
+                              labelStyle: TextStyle(color: textColor.withValues(alpha: 0.6), fontSize: 14),
+                            ),
+                            dropdownColor: AppColors.card,
+                            style: TextStyle(color: textColor, fontSize: 16),
+                            items: [
+                              DropdownMenuItem(value: 'donor', child: Text('donor'.tr)),
+                              DropdownMenuItem(value: 'volunteer', child: Text('volunteer'.tr)),
+                              DropdownMenuItem(value: 'ngo', child: Text('ngo'.tr)),
+                              DropdownMenuItem(value: 'buyer', child: Text('buyer'.tr)),
+                            ],
+                            onChanged: (val) {
+                              if (val != null) selectedRole.value = val;
+                            },
+                          ),
+                        ),
+                      )),
 
                   const SizedBox(height: 30),
 
                   Obx(
                     () => CustomBWButton(
                       isLoading: authController.isLoading.value,
-                      title: "Register",
-                      bgColor: AppColors.white,
+                      title: 'register'.tr,
+                      bgColor: AppColors.background,
                       shadowLight: shadowLight,
                       shadowDark: shadowDark,
                       textColor: textColor,
@@ -133,7 +179,7 @@ class SignupScreen extends StatelessWidget {
                             password.isEmpty ||
                             confirmPassword.isEmpty) {
                           Get.snackbar(
-                            "Error",
+                            'error'.tr,
                             "Please fill in all fields",
                             snackPosition: SnackPosition.BOTTOM,
                             backgroundColor: Colors.redAccent,
@@ -144,7 +190,7 @@ class SignupScreen extends StatelessWidget {
 
                         if (password != confirmPassword) {
                           Get.snackbar(
-                            "Error",
+                            'error'.tr,
                             "Passwords do not match",
                             snackPosition: SnackPosition.BOTTOM,
                             backgroundColor: Colors.redAccent,
@@ -157,11 +203,12 @@ class SignupScreen extends StatelessWidget {
                           email,
                           password,
                           name,
+                          selectedRole.value,
                         );
                         if (isRegistered) {
                           Get.offAll(() => MainLayoutScreen());
                         } else {
-                          Get.snackbar("Error", "Please try again!");
+                          Get.snackbar('error'.tr, "Please try again!");
                         }
                       },
                     ),
@@ -175,14 +222,14 @@ class SignupScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Already have an account? ",
+                          'already_have_acc'.tr,
                           style: TextStyle(
                             color: textColor.withValues(alpha: 0.6),
                           ),
                         ),
-                        const Text(
-                          "Login",
-                          style: TextStyle(
+                        Text(
+                          'login'.tr,
+                          style: const TextStyle(
                             color: AppColors.primary,
                             fontWeight: FontWeight.bold,
                           ),

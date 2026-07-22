@@ -85,4 +85,46 @@ class FoodPostModel {
       'safetyAlerts': safetyAlerts,
     };
   }
+
+  FoodPostModel copyWith({
+    String? id,
+    String? userId,
+    String? userName,
+    String? type,
+    String? title,
+    String? description,
+    String? quantity,
+    String? pickupLocation,
+    String? imageUrl,
+    String? status,
+    DateTime? createdAt,
+    double? price,
+    String? claimedBy,
+    String? claimerContact,
+    List<String>? tags,
+    DateTime? expiryDate,
+    String? storageTemperature,
+    List<String>? safetyAlerts,
+  }) {
+    return FoodPostModel(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      userName: userName ?? this.userName,
+      type: type ?? this.type,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      quantity: quantity ?? this.quantity,
+      pickupLocation: pickupLocation ?? this.pickupLocation,
+      imageUrl: imageUrl ?? this.imageUrl,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      price: price ?? this.price,
+      claimedBy: claimedBy ?? this.claimedBy,
+      claimerContact: claimerContact ?? this.claimerContact,
+      tags: tags ?? this.tags,
+      expiryDate: expiryDate ?? this.expiryDate,
+      storageTemperature: storageTemperature ?? this.storageTemperature,
+      safetyAlerts: safetyAlerts ?? this.safetyAlerts,
+    );
+  }
 }

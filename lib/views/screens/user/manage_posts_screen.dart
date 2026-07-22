@@ -95,12 +95,20 @@ class ManagePostsScreen extends StatelessWidget {
                     child: Text('Mark as Available'),
                   ),
                   const PopupMenuItem(
-                    value: 'Claimed',
-                    child: Text('Mark as Claimed'),
+                    value: 'Reserved',
+                    child: Text('Mark as Reserved'),
                   ),
                   const PopupMenuItem(
                     value: 'Sold',
                     child: Text('Mark as Sold'),
+                  ),
+                  const PopupMenuItem(
+                    value: 'Expired',
+                    child: Text('Mark as Expired'),
+                  ),
+                  const PopupMenuItem(
+                    value: 'Completed',
+                    child: Text('Mark as Completed'),
                   ),
                 ],
                 child: Container(
