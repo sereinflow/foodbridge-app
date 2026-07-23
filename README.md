@@ -10,46 +10,7 @@ This project implements the **MVC (Model-View-Controller)** pattern combined wit
 
 GitHub natively renders diagram blocks using **Mermaid**. Below is the internal structure of the software project:
 
-```mermaid
-graph TD
-    subgraph UI Layer (Views)
-        MainLayout[MainLayoutScreen]
-        Details[FoodPostDetailsScreen]
-        Checkout[CheckoutScreen]
-        MyPosts[MyPostsScreen]
-        MyOrders[MyOrdersScreen]
-    end
-
-    subgraph Controller Layer (GetX)
-        AuthCtrl[AuthController]
-        HomeCtrl[HomeController]
-        PostCtrl[CreatePostController]
-        ReviewCtrl[ReviewController]
-    end
-
-    subgraph Data Access Layer
-        PostRepo[PostRepository]
-        StatsRepo[StatsRepository]
-        AuthService[Firebase Auth]
-    end
-
-    subgraph Database Layer
-        Firestore[(Cloud Firestore)]
-        Storage[(Firebase Storage)]
-    end
-
-    %% Connections
-    MainLayout --> HomeCtrl
-    Checkout --> PostCtrl
-    MyPosts --> PostCtrl
-    Details --> ReviewCtrl
-    
-    HomeCtrl --> PostRepo
-    PostCtrl --> PostRepo
-    PostRepo --> Firestore
-    PostRepo --> Storage
-    AuthCtrl --> AuthService
-```
+![Software Architecture Diagram](assets/architecture.png)
 
 ---
 
